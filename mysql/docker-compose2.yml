@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql-dev
+    environment:
+      MYSQL_DATABASE: dev           # Predefined database
+      MYSQL_USER: dev               # Predefined user
+      MYSQL_PASSWORD: dev           # Predefined password
+      MYSQL_ROOT_PASSWORD: dev      # Root password
+    ports:
+      - "3306:3306"                 # Bind port 3306 to host
+    volumes:
+      - mysql-data:/var/lib/mysql    # Persist MySQL data
+    networks:
+      - dev-network
+    command: --bind-address=0.0.0.0  # Allow MySQL to listen on all interfaces
+
+networks:
+  dev-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
