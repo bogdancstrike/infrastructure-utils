@@ -1,0 +1,8 @@
+gitlab-runner:
+  image: gitlab/gitlab-runner:alpine
+  container_name: gitlab-runner
+  restart: always
+  depends_on:
+    - web
+  networks:
+    - gitlab
