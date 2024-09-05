@@ -11,25 +11,25 @@ The following tools are supported with their respective configurations in the re
 - **Grafana & Prometheus**: Monitoring and alerting setup.
 - **InfluxDB & Grafana**: Time series database with Grafana visualization.
 - **Jaeger & OpenTelemetry**: Distributed tracing system with telemetry support.
-- **Kafka**: Distributed streaming platform.
+- **Kafka**: Distributed streaming platform. Includes Kafka-UI
 - **Keycloak**: Identity and access management (IAM) solution.
 - **Kibana, Elasticsearch, & Logstash**: ELK stack for logging and search analytics.
 - **MailDev**: Simple email service for development.
 - **MariaDB & Adminer**: MariaDB database with Adminer for web-based administration.
-- **Minio**: High-performance object storage system.
-- **MongoDB**: NoSQL database.
+- **Minio**: High-performance object storage system with UI.
+- **MongoDB**: NoSQL database with Mongo Express UI.
 - **MySQL**: Relational database management system.
 - **Nginx & Proxy Manager**: Web server and reverse proxy management.
 - **Nginx-eID MTLS**: Mutual TLS with electronic identification.
 - **Postfix**: Mail transfer agent (MTA).
-- **Postgres**: PostgreSQL relational database.
-- **Redis**: In-memory key-value data store.
+- **Postgres**: PostgreSQL relational database. Includes pg-admin UI
+- **Redis**: In-memory key-value data store. Includes redis-commander UI
 - **Redpanda**: Modern streaming data platform, compatible with Kafka API.
   - **redpanda-cloud**
   - **redpanda-single TLS**
   - **redpanda-single**
 - **Nexus**: Repository manager.
-- **Traefik**: Edge router and load balancer.
+- **Traefik**: Edge router and load balancer with UI.
 
 ## Usage
 
@@ -38,8 +38,8 @@ Each tool has its own folder containing the necessary `docker-compose.yml` file 
 1. Clone the repository:
 
 ```bash
-   git https://github.com/bogdancstrike/infrastructure-utils
-   cd infrastructure-utils
+git https://github.com/bogdancstrike/infrastructure-utils
+cd infrastructure-utils
 ```
 
 2. Choose project to deploy
@@ -62,3 +62,6 @@ We welcome contributions to this repository. You can contribute in the following
 - **Improving Configurations**: If you find any configurations that could be optimized or improved, submit a pull request with your changes.
 - **Reporting Issues**: If you encounter any problems, feel free to open an issue describing the problem in detail. This will help us maintain the repository.
 - **Documentation Updates**: If any part of the documentation (including this README) could be improved, please propose the changes.
+
+
+Thank you for using and contributing to this repository! Hope it helps make your tool deployments faster and more efficient.
