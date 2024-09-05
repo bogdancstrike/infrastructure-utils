@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  maildev:
+    image: maildev/maildev:latest
+    container_name: maildev
+    environment:
+      # MailDev credentials (if needed for SMTP authentication)
+      MAILDEV_SMTP_USER: user@example.com
+      MAILDEV_SMTP_PASS: password123
+    ports:
+      - "1080:1080"   # MailDev web interface (UI)
+      - "1025:1025"   # SMTP server
+    networks:
+      - mail-network
+    command: bin/maildev --web 1080 --smtp 1025 --hide-extensions STARTTLS
+
+networks:
+  mail-network:
+    driver: bridge
+
+
+# https://github.com/maildev/maildev/blob/master/README.md#usage
+# https://github.com/maildev/maildev/blob/master/docs/docker.md

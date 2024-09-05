@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    environment:
+      discovery.type: single-node
+      ELASTIC_USERNAME: elastic
+      ELASTIC_PASSWORD: changeme
+    ports:
+      - "9200:9200"
+    networks:
+      - dev-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.2
+    networks:
+      - dev-network
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.2
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: changeme
+    ports:
+      - "5601:5601"
+    networks:
+      - dev-network
+    depends_on:
+      - elasticsearch
+
+volumes:
+  esdata:
+networks:
+  dev-network:
+    driver: bridge
