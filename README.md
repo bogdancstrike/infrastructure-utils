@@ -30,6 +30,7 @@ The following tools are supported with their respective configurations in the re
   - **redpanda-single**
 - **Nexus**: Repository manager.
 - **Traefik**: Edge router and load balancer with UI.
+- more at https://github.com/docker/awesome-compose
 
 ## Usage
 
