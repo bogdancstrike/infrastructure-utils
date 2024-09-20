@@ -3,7 +3,6 @@ version: '3.8'
 services:
   database:
     image: mysql:8.0
-    network_mode: host
     environment:
       MYSQL_ROOT_PASSWORD: dev
       MYSQL_DATABASE: dev
