@@ -14,11 +14,13 @@ services:
     restart: always
 
 
+# gammurc ini file
 gammu-config/gammurc
 [gammu]
 device = /dev/ttyUSB0
 connection = at115200
 
+# python code
 import gammu
 
 sm = gammu.StateMachine()
