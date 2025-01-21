@@ -1,0 +1,31 @@
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "nginx-ingress"
+spec:
+  blocks:
+  - cidr: "10.10.20.10/32"
+  serviceSelector:
+    matchLabels:
+      "io.kubernetes.service.namespace": "nginx-ingress"
+---
+
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "rest-ips"
+spec:
+  blocks:
+  - start: "10.10.20.7"
+    stop: "10.10.20.9"
+---
+
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "rest-ips-180"
+spec:
+  blocks:
+  - start: "10.10.20.180"
+    stop: "10.10.20.190"
+

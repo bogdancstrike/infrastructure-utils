@@ -1,0 +1,89 @@
+apiVersion: {{ template "taiga.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ template "taiga.fullname" . }}-events
+  labels: {{- include "taiga.events.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{- include "taiga.events.matchLabels" . | nindent 6 }}
+  replicas: {{ .Values.events.replicas }}
+  template:
+    metadata:
+      labels: {{- include "taiga.events.labels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ template "taiga.name" . }}-events
+      {{- if .Values.events.podAnnotations }}
+      annotations:
+        {{- include "taiga.tplValue" (dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "taiga.events.imagePullSecrets" . | indent 6 }}
+      {{- if .Values.events.affinity }}
+      affinity: {{- include "taiga.tplValue" (dict "value" .Values.events.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.events.tolerations }}
+      tolerations: {{- include "taiga.tplValue" (dict "value" .Values.events.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ template "taiga.serviceAccountName" . }}
+      {{- with .Values.events.securityContext }}
+      securityContext: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      # https://www.caktusgroup.com/blog/2017/03/14/production-ready-dockerfile-your-python-django-app/
+      - name: {{ template "taiga.fullname" . }}-events
+        image: {{ template "taiga.events.image" . }}
+        imagePullPolicy: {{ .Values.events.image.pullPolicy | quote }}
+        {{- if .Values.events.resources }}
+        resources: {{ toYaml .Values.events.resources | nindent 12 }}
+        {{- end }}
+        env:
+          - name: TAIGA_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.secretName }}
+                key: {{ .Values.secretKey }}
+#            value: "{{ .Values.secretKey }}"
+          - name: RABBITMQ_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.events.rabbitmq.auth.secretName }}
+                key: {{ .Values.events.rabbitmq.auth.usernameKey }} 
+#            value: {{ .Values.events.rabbitmq.auth.username }}
+          - name: RABBITMQ_PASS
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.events.rabbitmq.auth.secretName }}
+                key: {{ .Values.events.rabbitmq.auth.passwordKey }}
+#            value: {{ .Values.events.rabbitmq.auth.password }}
+          {{- if .Values.events.extraVars }}
+          {{- toYaml .Values.events.extraVars | nindent 12 }}
+          {{- end }}
+        # Original check: wget -q -t 1 --spider http://localhost:8080/api/v1/
+        # but it does not work so change localhost to 127.0.0.1
+        ports:
+          - name: taiga-events
+            containerPort: 8888
+        {{- if .Values.events.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: /admin/login/
+            port: 8000
+          initialDelaySeconds: {{ .Values.events.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.events.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.events.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.events.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.events.livenessProbe.failureThreshold }}
+        {{- end }}
+        {{- if .Values.events.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: /admin/login/
+            port: 8000
+          initialDelaySeconds: {{ .Values.events.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.events.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.events.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.events.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.events.readinessProbe.failureThreshold }}
+        {{- end }}

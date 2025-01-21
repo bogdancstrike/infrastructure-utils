@@ -1,0 +1,27 @@
+global:
+  imageRegistry: "10.10.20.200:443"
+  storageClass: "nfs-client-1"
+
+controller:
+  replicaCount: 0
+
+broker:
+  replicaCount: 3
+  podAntiAffinityPreset: hard
+
+zookeeper:
+  enabled: true
+  replicaCount: 3
+
+kraft:
+  enabled: false
+
+listeners:
+  client:
+    protocol: PLAINTEXT
+
+  interbroker:
+    protocol: PLAINTEXT
+
+  external:
+    protocol: PLAINTEXT

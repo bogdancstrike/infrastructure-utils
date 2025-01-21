@@ -1,0 +1,13 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: nextcloud-external-db
+  namespace: nextcloud
+spec:
+  mount: external-secrets
+  type: kv-v2
+  path: nextcloud-external-db
+  refreshAfter: 10s
+  destination:
+    create: true
+    name: nextcloud-external-db

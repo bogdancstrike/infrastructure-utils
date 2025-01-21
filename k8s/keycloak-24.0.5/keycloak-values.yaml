@@ -1,0 +1,78 @@
+global:
+  imageRegistry: "nexus.hera.ro"
+production: true
+logging:
+  level: INFO
+replicaCount: 3
+image:
+  repository: bitnami/keycloak
+  #tag: 24.0.5-debian-12-r3
+  tag: 26.0.7-debian-12-r0
+  debug: true
+auth:
+  adminUser: admin
+  existingSecret: keycloak-admin
+  passwordSecretKey: KEYCLOAK_ADMIN_PASSWORD
+tls:
+  enabled: true
+  existingSecret: "keycloak-mtls"
+  usePem: true
+service:
+  http:
+    enabled: false
+  type: ClusterIP
+networkPolicy:
+  enabled: false
+serviceAccount:
+  automountServiceAccountToken: true
+postgresql:
+  enabled: false
+externalDatabase:
+  host: "pg-perso-ha.postgresdb"
+  port: 5432
+  database: keycloak
+  existingSecret: keycloak-external-db
+  existingSecretUserKey: user
+  existingSecretPasswordKey: password
+extraEnvVars:
+  - name: KC_DB
+    value: 'postgres'
+  - name: KEYCLOAK_JDBC_PARAMS
+    value: 'sslmode=verify-full&sslrootcert=/opt/bitnami/keycloak/certs/ca.crt&sslcert=/opt/bitnami/keycloak/certs/tls.crt&sslkey=/opt/bitnami/keycloak/certs/key.der'
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: keycloak.hera.ro
+  servicePort: https
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+    # cert-manager.io/common-name: keycloak.hera.ro
+  # tls: true
+  tls:
+    - secretName: custom-socket-certs
+      hosts:
+        - keycloak.hera.ro
+
+adminIngress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: keycloak-admin.hera.ro
+  servicePort: https
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+    cert-manager.io/common-name: keycloak-admin.hera.ro
+  tls: true
+keycloakConfigCli:
+  configuration: |
+    {
+      "realm" : "master",
+      "attributes": {        
+        "frontendUrl": "https://keycloak-admin.hera.ro"
+      }
+    }

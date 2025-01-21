@@ -1,0 +1,30 @@
+/*.login-pf body {*/
+/*    background: linear-gradient(to bottom, #D3D3D3, #808080);*/
+/*    background-size: cover;*/
+/*    min-height: 100%;*/
+/*}*/
+
+.card-pf {
+
+    width: 500px;
+    margin: auto;
+    animation: fadeInSlide 0.8s ease-in-out;
+
+}
+
+@keyframes fadeInSlide {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#kc-header-wrapper {
+    font-size: 30px;
+    color: white;
+    text-align: center;
+}

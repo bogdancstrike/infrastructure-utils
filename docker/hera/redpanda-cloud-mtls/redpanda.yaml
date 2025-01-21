@@ -1,0 +1,37 @@
+redpanda:
+  rpc_server_tls:
+    enabled: true
+    require_client_auth: false
+    key_file: /etc/redpanda/tls/server.key
+    cert_file: /etc/redpanda/tls/server.crt
+    truststore_file: /etc/redpanda/tls/ca.crt
+    crl_file: ca.crl # Optional
+  kafka_api:
+    - address: 0.0.0.0
+      port: 9092
+      name: tls_listener
+  kafka_api_tls:
+    - name: tls_listener
+      key_file: /etc/redpanda/tls/server.key
+      cert_file: /etc/redpanda/tls/server.crt
+      truststore_file: /etc/redpanda/tls/ca.crt
+#        crl_file: ca.crl # Optional
+      enabled: true
+      require_client_auth: false
+  admin_api_tls: [ ]
+  rpc_server:
+    address: 0.0.0.0
+    port: 33145
+  admin:
+    address: 0.0.0.0
+    port: 9644
+    tls:
+      enabled: true
+      key_file: /etc/redpanda/tls/server.key
+      cert_file: /etc/redpanda/tls/server.crt
+      truststore_file: /etc/redpanda/tls/ca.crt
+pandaproxy:
+  pandaproxy_api_tls: [ ]
+schema_registry:
+  schema_registry_api_tls: [ ]
+

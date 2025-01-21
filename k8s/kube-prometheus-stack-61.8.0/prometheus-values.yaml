@@ -1,0 +1,279 @@
+global:
+  imageRegistry: "nexus.hera.ro"
+
+kubeControllerManager:
+  enabled: true
+  service:
+    enabled: true
+  serviceMonitor:
+    enabled: true
+    https: true
+    scheme: https
+    insecureSkipVerify: true
+
+kubeScheduler:
+  enabled: true
+  # endpoints:
+  #   - 10.20.20.101
+  service:
+    enabled: true
+    # port: 10259
+    # targetPort: 10259
+    # selector:
+    #   component: kube-scheduler
+  serviceMonitor:
+    enabled: true
+    https: true
+    insecureSkipVerify: true
+    scheme: https
+    # serverName: localhost
+    # caFile: /etc/prometheus/scheduler-client-cert/ca.crt
+    # certFile: /etc/prometheus/scheduler-client-cert/scheduler.crt
+    # keyFile: /etc/prometheus/scheduler-client-cert/scheduler.key
+
+kubeEtcd:
+  enabled: true
+  serviceMonitor:
+   scheme: https
+   insecureSkipVerify: false
+   serverName: localhost
+   caFile: /etc/prometheus/etcd-client-cert/ca.crt
+   certFile: /etc/prometheus/etcd-client-cert/healthcheck-client.crt
+   keyFile: /etc/prometheus/etcd-client-cert/healthcheck-client.key
+
+
+prometheus-node-exporter:
+  prometheus:
+    monitor:
+      scheme: https
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        insecureSkipVerify: true
+  kubeRBACProxy:
+    enabled: true
+    image:
+      registry: repo.local
+      repository: kubebuilder/kube-rbac-proxy
+      tag: v0.15.0
+      sha: ""
+      pullPolicy: IfNotPresent
+    port: 8100
+    portName: http
+    enableHostPort: false #
+    proxyEndpointsPort: 8888
+    enableProxyEndpointsHostPort: false
+
+  # extraArgs:
+  #   - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+  #   - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+  # extraContainers:
+  #   - name: nginx-proxy
+  #     image: nginx:1.19-alpine
+  #     ports:
+  #       - containerPort: 9100
+  #         name: https-metrics
+
+  #     volumeMounts:
+  #       - name: nginx-config
+  #         mountPath: /etc/nginx/nginx.conf
+  #         subPath: nginx.conf
+  #       - name: tls-certs
+  #         mountPath: /etc/nginx/tls
+
+  # extraVolumes:
+  #   - name: nginx-config
+  #     configMap:
+  #       name: nginx-config    # Make sure to create a ConfigMap for nginx.conf
+  #   - name: tls-certs
+  #     secret:
+  #       secretName: node-exporter-tls
+
+  # service:
+  #   portName: https-metrics # Update to reflect HTTPS service
+  #   port: 9100
+    
+
+alertmanager:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+      cert-manager.io/common-name: alertmanager.hera.ro
+    hosts:
+      - alertmanager.hera.ro
+    path: /
+    tls:
+    - secretName: alertmanager.hera.ro-tls
+      hosts:
+      - alertmanager.hera.ro
+
+grafana:
+  adminPassword: "[][][]"
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+      cert-manager.io/common-name: grafana.hera.ro
+    hosts:
+      - grafana.hera.ro
+    path: /
+    tls:
+    - secretName: grafana.hera.ro-tls
+      hosts:
+      - grafana.hera.ro
+  persistence:
+    type: pvc
+    enabled: true
+    storageClassName: csi-cephfs-sc
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+##################
+  sidecar:
+    datasources:
+      enabled: true
+      timeout: 30
+      defaultDatasourceScrapeInterval: 5s  
+  serviceMonitor:
+    interval: 5s
+    scrapeTimeout: 30s
+##################
+
+prometheus:
+###
+  monitor:
+    scheme: https
+# ###
+#   prometheusSpec:
+#     secrets: ['etcd-client-cert']
+###
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+      cert-manager.io/common-name: prometheus.hera.ro
+    hosts:
+      - prometheus.hera.ro
+    path: /
+    tls:
+    - secretName: prometheus.hera.ro-tls
+      hosts:
+      - prometheus.hera.ro
+##########
+  serviceMonitor:
+    interval: 5s
+  additionalServiceMonitors:
+    - name: "luna-client-proxy"
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: luna-client-proxy
+      endpoints:
+        - port: http
+      namespaceSelector:
+        matchNames:
+          - luna-client-proxy
+    - name: "vault"
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: vault
+      endpoints:
+        - port: https
+          interval: 30s
+          path: /v1/sys/metrics
+          scheme: https
+          tlsConfig:
+            insecureSkipVerify: true
+          authorization:
+            credentials:
+              name: vault-prometheus-metrics
+              key: token
+      namespaceSelector:
+        matchNames:
+          - vault
+  ##
+  prometheusSpec:
+    persistentVolumeClaimRetentionPolicy:
+     whenDeleted: Retain
+     whenScaled: Retain
+    storageSpec:
+     volumeClaimTemplate:
+       spec:
+         storageClassName: csi-cephfs-sc
+         accessModes: ["ReadWriteOnce"]
+         resources:
+           requests:
+             storage: 10Gi
+    additionalScrapeConfigs:
+      - job_name: 'ceph'
+        honor_labels: true
+        scheme: https
+        tls_config:
+          ca_file: /etc/prometheus/certs-extra/ca.crt
+          cert_file: /etc/prometheus/certs-extra/tls.crt
+          key_file: /etc/prometheus/certs-extra/tls.key
+          insecure_skip_verify: true
+        static_configs:
+          - targets:
+              - '10.10.20.111:9283'
+            # - '10.10.20.112:9283'
+            # - '10.10.20.113:9283'
+      - job_name: 'proxmox'
+        honor_labels: true
+        scheme: https
+        tls_config:
+          ca_file: /etc/prometheus/certs-extra/ca.crt
+          cert_file: /etc/prometheus/certs-extra/tls.crt
+          key_file: /etc/prometheus/certs-extra/tls.key
+          insecure_skip_verify: true
+        static_configs:
+          - targets:
+              - '10.10.50.11:9100'
+              - '10.10.50.12:9100'
+              - '10.10.50.13:9100'
+      # - job_name: 'vault'
+      #   metrics_path: /v1/sys/metrics
+      #   scheme: https
+      #   authorization:
+      #     credentials:
+      #       name: vault-prometheus-metrics
+      #       key: token
+      #   tls_config:
+      #     # ca_file: /etc/prometheus/certs-extra/ca.crt
+      #     # cert_file: /etc/prometheus/certs-extra/tls.crt
+      #     # key_file: /etc/prometheus/certs-extra/tls.key
+      #     insecure_skip_verify: true                 
+      #   static_configs:
+      #     - targets:
+      #         - 'vault.hera.ro:9283'
+
+    # Additional volumes on the output StatefulSet definition.
+    volumes:
+      - name: node-exporter-mtls
+        secret:
+          secretName: node-exporter-mtls
+    # kubectl -n monitoring create secret generic etcd-client-cert --from-file=/etc/kubernetes/pki/etcd/ca.crt --from-file=/etc/kubernetes/pki/etcd/healthcheck-client.crt --from-file=/etc/kubernetes/pki/etcd/healthcheck-client.key          
+      - name: etcd-client-cert
+        secret:
+          secretName: etcd-client-cert
+# kubectl -n monitoring create secret generic scheduler-client-cert --from-file=/opt/scheduler/ca.crt --from-file=/opt/scheduler/scheduler.crt --from-file=/opt/scheduler/scheduler.key
+      # - name: scheduler-client-cert
+      #   secret:
+      #     secretName: scheduler-client-cert      
+    # Additional VolumeMounts on the output StatefulSet definition.
+    volumeMounts:
+      - name: node-exporter-mtls
+        mountPath: /etc/prometheus/certs-extra
+        readOnly: true
+      - name: etcd-client-cert
+        mountPath: /etc/prometheus/etcd-client-cert
+        readOnly: true
+      # - name: scheduler-client-cert
+      #   mountPath: /etc/prometheus/scheduler-client-cert
+      #   readOnly: true    

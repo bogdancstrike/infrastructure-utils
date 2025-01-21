@@ -1,0 +1,115 @@
+---
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: pg-perso
+  namespace: postgresdb
+spec:
+#  dataSource:
+#  volumes:
+#      pgDataVolume:
+#        pvcName: pvc-b30c6291-dc6c-49f8-839b-6a4b2f65eab7-pvc
+#        directory: pg16/pg-perso
+#      pgWALVolume:
+#        pvcName: pvc-2bf6d5ca-2f6e-46b9-830f-908aaea08948-pvc
+  service:
+    type: LoadBalancer
+  port: 5432
+  postgresVersion: 16
+  customReplicationTLSSecret:
+    name: pg-perso-mtls
+  customTLSSecret:
+    name: pg-perso-mtls
+  patroni:
+    switchover:
+      enabled: true
+    leaderLeaseDurationSeconds: 30
+    port: 8008
+    syncPeriodSeconds: 10
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - local all all peer
+          - host all all 127.0.0.1/32 trust
+          - hostssl all all 0.0.0.0/0 md5
+        parameters:
+          max_connections: 999
+          # max_prepared_transactions: 0
+          max_worker_processes: 8
+          max_parallel_workers: 8
+          work_mem: 16MB
+      bootstrap:
+        initdb:
+          - data-checksums=true
+          - encoding=C
+          - locale=C
+  users:
+    - name: postgres
+      options: SUPERUSER
+    - databases:
+        - keycloak
+      name: keycloak
+    - databases:
+        - gitea
+      name: gitea
+    - databases:
+        - test1
+      name: test1
+    - databases:
+        - nextcloud
+      name: nextcloud
+  instances:
+    - name: 'instance'
+      replicas: 2
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    postgres-operator.crunchydata.com/cluster: 'pg-perso'
+                    postgres-operator.crunchydata.com/instance-set: 'instance'
+      dataVolumeClaimSpec:
+        storageClassName: csi-cephfs-sc
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 64Gi
+      walVolumeClaimSpec:
+        storageClassName: csi-cephfs-sc
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 16Gi
+  backups:
+    pgbackrest:
+      configuration:
+      - secret:
+          name: pgo-pgbackrest-secrets
+      global:
+        repo1-cipher-type: aes-256-cbc
+        repo1-retention-full: "6" # least a week
+        repo1-retention-full-type: count # time
+        repo1-retention-diff: "15" # least 3 days
+        repo1-retention-history: "0"
+      manual:
+        options:
+          - '--type=full'
+        repoName: repo1
+      repos:
+      - name: repo1
+        schedules:
+          full: "0 2 * * 1-6"
+          differential: "15 9-17/2 * * 1-6"
+        volume:
+          volumeClaimSpec:
+            storageClassName: csi-cephfs-sc
+            accessModes:
+              - ReadWriteMany
+            resources:
+              requests:
+                storage: 32Gi

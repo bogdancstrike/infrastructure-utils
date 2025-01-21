@@ -1,0 +1,13 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: kafka-ui-store
+  namespace: kafka-ui
+spec:
+  mount: external-secrets
+  type: kv-v2
+  path: kafka-ui-store
+  refreshAfter: 10s
+  destination:
+    create: true
+    name: kafka-ui-store

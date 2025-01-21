@@ -1,0 +1,27 @@
+{{ if .Values.gateway.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "taiga.fullname" . }}-gateway
+  labels: {{- include "taiga.gateway.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.gateway.service.type }}
+  {{- if (or (eq .Values.gateway.service.type "LoadBalancer") (eq .Values.gateway.service.type "NodePort")) }}
+  externalTrafficPolicy: {{ .Values.gateway.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{ if eq .Values.gateway.service.type "LoadBalancer" }}
+  loadBalancerSourceRanges: {{ .Values.gateway.service.loadBalancerSourceRanges }}
+  {{ end }}
+  {{- if (and (eq .Values.gateway.service.type "LoadBalancer") (not (empty .Values.gateway.service.loadBalancerIP))) }}
+  loadBalancerIP: {{ .Values.gateway.service.loadBalancerIP }}
+  {{- end }}
+  ports:
+    - name: taiga-gateway
+      port: {{ .Values.gateway.service.port }}
+      targetPort: taiga-gateway
+      {{- if (and (eq .Values.gateway.service.type "NodePort") (not (empty .Values.gateway.service.nodePorts.http)))}}
+      nodePort: {{ .Values.gateway.service.nodePorts.http }}
+      {{- end }}
+  selector: {{- include "taiga.back.matchLabels" . | nindent 4 }}
+{{ end }}

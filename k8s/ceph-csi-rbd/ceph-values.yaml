@@ -1,0 +1,72 @@
+---
+csiConfig:
+  - clusterID: "e217064e-3ac7-11ef-b27b-957a7626c1d7"
+    monitors:
+      - "10.10.20.111:6789"
+      - "10.10.20.112:6789"
+      - "10.10.20.113:6789"
+
+nodeplugin:
+  registrar:
+    image:
+      repository: nexus.hera.ro/registry.k8s.io/sig-storage/csi-node-driver-registrar
+      tag: v2.10.0
+      pullPolicy: IfNotPresent
+  plugin:
+    image:
+      repository: nexus.hera.ro/quay.io/cephcsi/cephcsi
+      tag: v3.11.0
+      pullPolicy: IfNotPresent
+
+provisioner:
+  provisioner:
+    image:
+      repository: nexus.hera.ro/registry.k8s.io/sig-storage/csi-provisioner
+      tag: v4.0.0
+      pullPolicy: IfNotPresent
+
+  attacher:
+    name: attacher
+    enabled: true
+    image:
+      repository: nexus.hera.ro/registry.k8s.io/sig-storage/csi-attacher
+      tag: v4.5.0
+      pullPolicy: IfNotPresent
+
+  resizer:
+    name: resizer
+    enabled: true
+    image:
+      repository: nexus.hera.ro/registry.k8s.io/sig-storage/csi-resizer
+      tag: v1.10.0
+      pullPolicy: IfNotPresent
+
+  snapshotter:
+    image:
+      repository: nexus.hera.ro/registry.k8s.io/sig-storage/csi-snapshotter
+      tag: v7.0.0
+      pullPolicy: IfNotPresent
+
+storageClass:
+  create: true
+  name: csi-rbd-sc
+  clusterID: e217064e-3ac7-11ef-b27b-957a7626c1d7
+  pool: rbd-csi
+  imageFeatures: "layering"
+  provisionerSecret: csi-rbd-secret
+  provisionerSecretNamespace: ""
+  controllerExpandSecret: csi-rbd-secret
+  controllerExpandSecretNamespace: ""
+  nodeStageSecret: csi-rbd-secret
+  nodeStageSecretNamespace: ""
+  fstype: ext4
+  reclaimPolicy: Retain
+  allowVolumeExpansion: true
+  mountOptions:
+    - discard
+
+secret:
+  create: false
+  name: csi-rbd-secret
+  userID: csi-rbd
+  userKey: AQD/bZdm6MV9CxAAXj2YtnXqSsMw6q+BltoIuQ==

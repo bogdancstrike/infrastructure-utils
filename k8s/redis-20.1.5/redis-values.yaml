@@ -1,0 +1,46 @@
+global:
+  imageRegistry: "nexus.hera.ro"
+  storageClass: "csi-cephfs-sc"
+image:
+  registry: docker.io
+  repository: bitnami/redis
+  tag: 7.4.0-debian-12-r4
+  digest: ""
+  debug: true 
+auth:
+  enabled: true
+  sentinel: true
+  existingSecret: "redis-tls-passwords"
+  existingSecretPasswordKey: "redis-tls-pass"
+  usePasswordFileFromSecret: true
+master:
+  count: 2
+  persistence:
+    enabled: true
+    path: /data
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+  persistentVolumeClaimRetentionPolicy:
+    enabled: true
+    whenScaled: Retain
+    whenDeleted: Retain
+  service:
+    type: NodePort
+replica:
+  kind: StatefulSet
+  replicaCount: 2
+  persistence:
+    enabled: true
+    path: /data
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+tls:
+  enabled: true
+  authClients: false
+  existingSecret: "redis-mtls"
+  certificatesSecret: ""
+  certFilename: "tls.crt"
+  certKeyFilename: "tls.key"
+  certCAFilename: "ca.crt"

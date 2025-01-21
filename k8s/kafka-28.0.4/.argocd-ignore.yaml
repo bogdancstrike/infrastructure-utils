@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ResourceOverride
+metadata:
+  name: "v1/Secret"
+spec:
+  ignoreDifferences: 
+    jsonPointers:
+    - /data/client-passwords
+    - /metadata/annotations/checksum

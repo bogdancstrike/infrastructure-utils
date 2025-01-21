@@ -1,0 +1,30 @@
+provisionDataStore:
+  cassandra: false
+allInOne:
+  enabled: true
+  image:
+    registry: ""
+    repository: nexus.hera.ro/jaegertracing/all-in-one
+    tag: "1.64.0"
+  ingress:
+    enabled: true
+    ingressClassName: private
+    annotations:
+      kubernetes.io/ingress.class: private
+      cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+      cert-manager.io/common-name: jaeger.hera.ro
+    hosts:
+      - jaeger.hera.ro
+    path: /
+    tls:
+    - secretName: jaeger.hera.ro-tls
+      hosts:
+      - jaeger.hera.ro
+storage:
+  type: memory
+agent:
+  enabled: false
+collector:
+  enabled: false
+query:
+  enabled: false

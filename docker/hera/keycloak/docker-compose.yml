@@ -1,0 +1,25 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.4
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_THEME_DIR: /opt/keycloak/themes
+      KC_THEME_DEFAULT: custom-theme
+    command: start-dev
+    ports:
+      - "8000:8080"
+    networks:
+      - keycloak-network
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./keycloak-themes:/opt/keycloak/themes
+    restart: always
+
+networks:
+  keycloak-network:
+    driver: bridge
+
+volumes:
+  keycloak-data:
+    driver: local

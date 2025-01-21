@@ -1,0 +1,38 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-mtls-certs-hera
+  namespace: redis
+spec:
+  secretName: redis-mtls-hera
+  issuerRef:
+    name: redis-mtls-issuer
+    kind: Issuer
+  commonName: cluster.local
+  ipAddresses:
+    - 127.0.0.1
+  dnsNames:
+    - redis
+    - redis.redis
+    - redis.redis.svc
+    - redis.redis.svc.cluster.local
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 2048
+  additionalOutputFormats:
+  - type: DER
+  duration: 2160h0m0s
+  renewBefore: 2100h0m0s
+  subject:
+    countries:
+      - RO
+    organizations:
+      - Hera-mTLS
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - key agreement

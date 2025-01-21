@@ -1,0 +1,18 @@
+// cd /var/www/html/config; touch CAN_INSTALL
+// cd ..; chown -R 33:www-data config
+
+
+// chmod 775 config.php
+// chmod 775 CAN_INSTALL
+
+// chown -R 33:www-data config
+// chown -R 33:www-data data
+// chmod 775 config.php
+
+### folosit; dupa au pornit podurile se intra in containerul de nextcloud-nginx si se executa
+trusted_domains in config.php
+chmod 0770 -R data
+chown -R 33:www-data config
+chown -R 33:www-data data
+chmod 775 config.php
+ + https://help.nextcloud.com/t/logcontroller-fails-to-poll-after-some-update/200167

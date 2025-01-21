@@ -1,0 +1,73 @@
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PGAdmin
+metadata:
+  name: pgadmin
+  namespace: postgresdb
+spec:
+  dataVolumeClaimSpec:
+    storageClassName: csi-rbd-sc
+    accessModes:
+    - "ReadWriteOnce"
+    resources:
+      requests:
+        storage: 8Gi
+  serverGroups:
+  - name: pg-hera-dbs
+    postgresClusterSelector: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: pgadmin-svc
+  name: pgadmin-svc
+  namespace: postgresdb
+spec:
+  ports:
+  - name: https
+    port: 5050
+    protocol: TCP
+    targetPort: 5050
+  selector:
+    postgres-operator.crunchydata.com/pgadmin: pgadmin
+  type: ClusterIP
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-hera.hera.ro-tls
+  namespace: postgresdb
+spec:
+  commonName: pg-hera.hera.ro
+  dnsNames:
+  - pg-hera.hera.ro
+  issuerRef:
+    kind: ClusterIssuer
+    name: vault-tls-clusterissuer
+  secretName: pg-hera.hera.ro-tls
+  usages:
+  - digital signature
+  - key encipherment
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pgadmin
+  namespace: postgresdb
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: pg-hera.hera.ro
+    http:
+      paths:
+      - backend:
+          service:
+            name: pgadmin-svc
+            port:
+              number: 5050
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - pg-hera.hera.ro
+    secretName: pg-hera.hera.ro-tls

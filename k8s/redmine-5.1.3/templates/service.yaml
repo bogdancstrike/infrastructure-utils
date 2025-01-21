@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "redmine.fullname" . }}
+  labels:
+    io.kompose.service: {{ include "redmine.fullname" . }}
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+    cloud.google.com/backend-config: '{"default": "{{ include "redmine.fullname" . }}"}'
+    cloud.google.com/neg: '{"ingress": true}'
+
+spec:
+  type: NodePort
+  selector:
+    io.kompose.service: {{ include "redmine.fullname" . }}
+  ports:
+    - name: redmine-port
+      port: 3000
+      targetPort: 3000
+  

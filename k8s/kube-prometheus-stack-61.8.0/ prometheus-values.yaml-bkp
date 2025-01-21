@@ -1,0 +1,101 @@
+global:
+  imageRegistry: "nexus.hera.ro"
+
+alertmanager:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+      cert-manager.io/common-name: alertmanager.hera.ro
+    hosts:
+      - alertmanager.hera.ro
+    path: /
+    tls:
+    - secretName: alertmanager.hera.ro-tls
+      hosts:
+      - alertmanager.hera.ro
+
+grafana:
+  adminPassword: "[][][]"
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+      cert-manager.io/common-name: grafana.hera.ro
+    hosts:
+      - grafana.hera.ro
+    path: /
+    tls:
+    - secretName: grafana.hera.ro-tls
+      hosts:
+      - grafana.hera.ro
+  persistence:
+    type: pvc
+    enabled: true
+    storageClassName: csi-cephfs-sc
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+      cert-manager.io/common-name: prometheus.hera.ro
+    hosts:
+      - prometheus.hera.ro
+    path: /
+    tls:
+    - secretName: prometheus.hera.ro-tls
+      hosts:
+      - prometheus.hera.ro
+  additionalServiceMonitors:
+    - name: "luna-client-proxy"
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: luna-client-proxy
+      endpoints:
+        - port: http
+      namespaceSelector:
+        matchNames:
+          - luna-client-proxy
+    - name: "vault"
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: vault
+      endpoints:
+        - port: https
+          interval: 30s
+          path: /v1/sys/metrics
+          scheme: https
+          tlsConfig:
+            insecureSkipVerify: true
+          authorization:
+            credentials:
+              name: vault-prometheus-metrics
+              key: token
+      namespaceSelector:
+        matchNames:
+          - vault
+  ##
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: 'ceph'
+        honor_labels: true
+        static_configs:
+          - targets:
+              - '10.10.20.111:9283'
+            # - '10.10.20.112:9283'
+            # - '10.10.20.113:9283'
+      - job_name: 'proxmox'
+        honor_labels: true
+        static_configs:
+          - targets:
+              - '10.10.50.11:9100'

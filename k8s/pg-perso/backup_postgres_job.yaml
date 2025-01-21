@@ -1,0 +1,210 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresdb-backup
+  namespace: postgresdb
+data:
+  backup.sh: |
+    #!/bin/bash
+    set -e
+
+    TMP_OUT=/tmp/dump.sql
+
+    Help() {
+        echo "Takes a backup of all PostgreSQL databases using pg_dumpall."
+        echo
+        echo "PGPASSWORD should be set via environment variable"
+        echo "ENCRYPT_PASSWORD should be set via environment variable"
+        echo
+        echo "syntax ./backup.sh -H postgres_host:port -u database_user -o /path/to/output/directory/"
+        echo
+        echo args:
+        echo "h     Displays this help message."
+        echo "H     The host:port at which to reach the postgres server."
+        echo "u     The database user to use. ENCRYPT_PASSWORD must be set."
+        echo "o     The directory to write the backup to. Backup file will be named in YYYY-MM-DD-all-databases.sql.gz.enc"
+        echo "C     (Optional) The path to the SSL certificate file."
+        echo "K     (Optional) The path to the SSL key file."
+        echo "R     (Optional) The path to the SSL root certificate file."
+        echo "M     (Optional) The SSL mode (e.g., verify-ca)."
+    }
+
+    Die() {
+        echo >&2 "$@"
+        echo
+        Help
+        echo
+        exit 1
+    }
+
+    ParseArgs() {
+        while getopts "h:H:u:o:C:K:R:M:" option; do
+           case $option in
+                h) # display Help
+                    Help
+                    exit;;
+                H)
+                    DB_HOST_PORT=${OPTARG};;
+                u)
+                    DB_USER=${OPTARG};;
+                o)
+                    OUT_DIR=${OPTARG};;
+                C)
+                    SSL_CERT=${OPTARG};;
+                K)
+                    SSL_KEY=${OPTARG};;
+                R)
+                    SSL_ROOT_CERT=${OPTARG};;
+                M)
+                    SSL_MODE=${OPTARG};;
+                \?) # Invalid option
+                    echo "Error: Invalid option"
+                    Help
+                    exit;;
+           esac
+        done
+    }
+
+    ValidateArgs() {
+        ! [[ -z ${DB_HOST_PORT} ]] || Die "missing required arg -H"
+        ! [[ -z ${DB_USER} ]] || Die "missing required arg -u"
+        ! [[ -z ${OUT_DIR} ]] || Die "missing required arg -o"
+        ! [[ -z ${PGPASSWORD} ]] || Die "PGPASSWORD env var must be set"
+        ! [[ -z ${ENCRYPT_PASSWORD} ]] || Die "ENCRYPT_PASSWORD env var must be set"
+    }
+
+    DumpDBAll() {
+        # Split DB_HOST_PORT into host and port
+        DB_HOST=$(echo ${DB_HOST_PORT} | cut -d':' -f1)
+        DB_PORT=$(echo ${DB_HOST_PORT} | cut -d':' -f2)
+
+        # Build the connection string
+        CONN_STR="host=${DB_HOST} port=${DB_PORT} user=${DB_USER}"
+
+        # Optionally append SSL parameters if provided
+        [[ ! -z ${SSL_CERT} ]] && CONN_STR+=" sslcert=${SSL_CERT}"
+        [[ ! -z ${SSL_KEY} ]] && CONN_STR+=" sslkey=${SSL_KEY}"
+        [[ ! -z ${SSL_ROOT_CERT} ]] && CONN_STR+=" sslrootcert=${SSL_ROOT_CERT}"
+        [[ ! -z ${SSL_MODE} ]] && CONN_STR+=" sslmode=${SSL_MODE}"
+
+        # Run pg_dumpall with connection string
+        echo "${CONN_STR}"
+        pg_dumpall -d "${CONN_STR}" -f ${TMP_OUT}
+    }
+
+    EncryptDump() {
+        mkdir -p ${OUT_DIR}
+        gzip -c ${TMP_OUT} \
+            |  openssl enc -pbkdf2 \
+                  -salt \
+                  -out ${OUT_DIR}/$(date +%F)-all-databases.sql.gz.enc \
+                  -pass pass:${ENCRYPT_PASSWORD}
+    }
+
+    ParseArgs $@
+    ValidateArgs
+    DumpDBAll
+    EncryptDump
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-perso-user-certs
+  namespace: postgresdb
+spec:
+  secretName: pg-perso-user-mtls
+  issuerRef:
+    name: pg-hera-mtls-issuer
+    kind: Issuer
+  commonName: pg-perso
+  dnsNames:
+    - pg-perso
+  isCA: false
+  duration: 2169h0m0s
+  renewBefore: 2000h0m0s
+  subject:
+    countries:
+      - RO
+    organizations:
+      - Hera-mTLS
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+    - key agreement
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: postgresdb
+spec:
+  storageClassName: csi-rbd-sc
+  resources:
+    requests:
+      storage: 5Gi
+  accessModes: 
+    - ReadWriteOnce
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgresdb-backup
+  namespace: postgresdb
+spec:
+  schedule: "0 0 * * 0"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: postgresbackup
+            image: nexus.hera.ro/postgres-backup:16.3
+            imagePullPolicy: Always
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pg-test-pguser-postgres
+                  key: password
+            - name: ENCRYPT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pg-test-pguser-postgres
+                  key: password
+            command:
+            - /backup.sh
+            args:
+            - -H pg-perso-ha.postgresdb:5432
+            - -u pg-perso
+            - -o /backups
+            - -C /tls/tls.crt
+            - -K /tls/tls.key
+            - -R /tls/ca.crt
+            - -M verify-ca
+            volumeMounts:
+            - name: backup-script
+              mountPath: /backup.sh
+              subPath: backup.sh
+            - name: backup-dir
+              mountPath: /backups
+            - name: certs
+              mountPath: /tls
+          volumes:
+          - name: backup-script
+            configMap:
+              name: postgresdb-backup
+              defaultMode: 0750
+          - name: backup-dir
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          - name: certs
+            secret:
+              secretName: pg-perso-user-mtls
+              optional: false
+              defaultMode: 0640
+
+# kubectl create job --from=cronjob/postgresdb-backup manual-backup -n postgresdb
+# openssl enc -d -pbkdf2 -in 2024-03-24-name-of-db-here.sql.gz.enc -k ENCRYPT_PASSWORD | gzip -d

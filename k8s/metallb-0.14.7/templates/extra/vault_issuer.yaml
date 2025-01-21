@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: cert-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vault-auth
+rules:
+- apiGroups:
+  - ""
+  resourceNames:
+  - vault-auth
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-auth
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vault-auth
+subjects:
+- kind: ServiceAccount
+  name: cert-manager
+  namespace: cert-manager
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: vault-tls-clusterissuer
+spec:
+  vault:
+    server: https://vault.vault:8200
+    path: pki_int_tls/sign/hera_tls
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURLekNDQWhPZ0F3SUJBZ0lVSDZNYzk3SUljaG9QeGwxU1pneVdVc3lnelFVd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0VqRVFNQTRHQTFVRUF4TUhhR1Z5WVM1eWJ6QWdGdzB5TkRBMk1UUXdOak16TlRSYUdBOHlNRFUwTURZdwpOekEyTXpReU5Gb3dFakVRTUE0R0ExVUVBeE1IYUdWeVlTNXliekNDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBTm91TDlHaHNSR0QvMlUwNEV1cFhVVnJSckIzaWpnVktJaXVDVnVXbGZmNDFKUVkKWFpSdUJlbTZLS1VTYk9NQWxheEYxaFN0bkNJOUtuT09iRURsNGJtNHU4aHVkNlRiVkpLOTJESE4rV0NDTHBubAo0ckVFQ29Kd1Q2VVErYWV3UWlZT0ljVS9HUnl4ejMyMUdobnU3NGxJcmExZS9mZTdwaGZya2owMUhoeTF1ang0Cld4bnpSQWlxZlMyczlvMk40TFJuMVl3anNTbzhlb3NBUjdJSDEvcHBJUVRRTnpNNUpTL0M2dEk5eXdkVFBMOVUKZHdvZng0VmpkUTZ2M3ppS0p1UjgvMm9ueS9IcmhLZVRZbUNLWi9uTVlBbUZNRU5PL1h1eFIzMUxocFNEb2R5MQpkdEFMNXVLcnJBZ1J0VGltV2szMVRyc01UaWU4OGh0YlpLQTFkMDBDQXdFQUFhTjNNSFV3RGdZRFZSMFBBUUgvCkJBUURBZ0VHTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3SFFZRFZSME9CQllFRkpYV1VmQmwrdHkwN3JBYmhVV1AKNTVVN3BLbk5NQjhHQTFVZEl3UVlNQmFBRkpYV1VmQmwrdHkwN3JBYmhVV1A1NVU3cEtuTk1CSUdBMVVkRVFRTApNQW1DQjJobGNtRXVjbTh3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUtqeDdnRm8xbWs5aUY0Z1h0Zm05NHZsClkyOEMvTVRXWDZ2SGtzL0MrdmtJVG9VOEFGU1QzQUQ5dUU3NzRyMG9VZTAzc1h0SFFNd0kzVm5HMGluZUh1MVIKdW9seWU5cXM0YzRvL2VFUFhHdkVjMHc2KzNvbnY5NVdnbFhHcGZQbVlDRjJYWmEwbEhWQlFFWHJRaVZFQkpwVwo1UW5ncHY5UGdwSGVRbjlrRWltbm85OTkvVkpsMy9LK1Q3U3FKcC9EMllYQncvWFp5S09LOTZkOFg5c0dJVWwwCjlsYWZrQ014cTZoM29vdWk1ZjVJV25KcGFQSEJLQlBWNDZobXhQNnlsbE1aeDhJL0dwU3ZHYUJYTEM5SVBPUS8Kem9kajYxSDBhMUQ2NlA1T3JGSDl3QUNBRll2MzF2Z3FjSkcwVXVhUFIxNDRlYVoxZFY3cWNUS0QxRWZnSGF3PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    auth:
+      kubernetes:
+        role: tls_issuer
+        mountPath: /v1/auth/kubernetes
+        serviceAccountRef:
+          name: vault-auth

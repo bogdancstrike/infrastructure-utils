@@ -1,0 +1,17 @@
+controller:
+  enabled: true
+  logLevel: info
+  image:
+    repository: nexus.hera.ro/quay.io/metallb/controller
+    tag: v0.14.7
+
+speaker:
+  image:
+    repository: nexus.hera.ro/quay.io/metallb/speaker
+    tag: v0.14.7
+    type: RollingUpdate
+  frr:
+    enabled: true
+    image:
+      repository: nexus.hera.ro/quay.io/frrouting/frr
+      tag: 9.1.0

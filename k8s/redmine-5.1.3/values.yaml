@@ -1,0 +1,29 @@
+namespace: redmine
+
+redmineWeb:
+  redmineContainer:
+    env:
+      dbHost: pg-perso-ha.postgresdb.svc
+      dbPort: "5432"
+    image:
+      repository: nexus.hera.ro/redmine
+      tag: 5.1.3-custom
+      pullPolicy: IfNotPresent
+  replicas: 1
+
+server:
+  ingress:
+    enabled: true
+    hostname: redmine.hera.ro
+    ingressClassName: nginx
+    annotations:
+       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+       kubernetes.io/ingress.class: nginx
+       cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+       cert-manager.io/common-name: redmine.hera.ro
+    tls: true
+
+persistentVolume:
+  storage: 15Gi
+

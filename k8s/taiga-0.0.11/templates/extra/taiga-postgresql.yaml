@@ -1,0 +1,13 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: taiga-postgresql
+  namespace: taiga
+spec:
+  mount: external-secrets
+  type: kv-v2
+  path: taiga-postgresql
+  refreshAfter: 10s
+  destination:
+    create: true
+    name: postgresql-secret

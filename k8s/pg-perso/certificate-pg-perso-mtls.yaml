@@ -1,0 +1,84 @@
+#vault write pki_int_mtls/roles/pg_hera_mtls allowed_domains="cluster.local,_crunchyrepl,pg-perso,pg-perso.postgresdb,pg-perso.postgresdb.svc,pg-perso.postgresdb.svc.cluster.local,pg-perso-ha,pg-perso-ha.postgresdb,pg-perso-ha.postgresdb.svc.cluster.local,pg-perso-primary,pg-perso-primary.postgresdb,pg-perso-primary.postgresdb.svc.cluster.local,pg-perso-pgbouncer,pg-perso-pgbouncer.postgresdb,pg-perso-pgbouncer.postgresdb.svc.cluster.local,pg-perso-replica,pg-perso-replica.postgresdb,pg-perso-replica.postgresdb.svc,pg-perso-replica.postgresdb.svc.cluster.local,pg-perso-replica-ha,pg-perso-replica-ha.postgresdb,pg-perso-replica-ha.postgresdb.svc.cluster.local" allow_subdomains=true allow_bare_domains=true enforce_hostnames=false
+#
+#vault policy write pg_hera_mtls - <<EOF
+#path "pki_int_mtls*"                        { capabilities = ["read", "list"] }
+#path "pki_int_mtls/sign/pg_hera_mtls"    { capabilities = ["create", "update"] }
+#path "pki_int_mtls/issue/pg_hera_mtls"   { capabilities = ["create"] }
+#EOF
+#
+#vault write auth/kubernetes/role/pg_hera_mtls_issuer \
+#    bound_service_account_names=vault-auth \
+#    bound_service_account_namespaces=pg-hera \
+#    policies=pg_hera_mtls \
+#    ttl=24h
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: postgresdb
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: pg-hera-mtls-issuer
+  namespace: postgresdb
+spec:
+  vault:
+    server: https://vault.vault:8200
+    path: pki_int_mtls/sign/pg_hera_mtls
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURLekNDQWhPZ0F3SUJBZ0lVSDZNYzk3SUljaG9QeGwxU1pneVdVc3lnelFVd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0VqRVFNQTRHQTFVRUF4TUhhR1Z5WVM1eWJ6QWdGdzB5TkRBMk1UUXdOak16TlRSYUdBOHlNRFUwTURZdwpOekEyTXpReU5Gb3dFakVRTUE0R0ExVUVBeE1IYUdWeVlTNXliekNDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBTm91TDlHaHNSR0QvMlUwNEV1cFhVVnJSckIzaWpnVktJaXVDVnVXbGZmNDFKUVkKWFpSdUJlbTZLS1VTYk9NQWxheEYxaFN0bkNJOUtuT09iRURsNGJtNHU4aHVkNlRiVkpLOTJESE4rV0NDTHBubAo0ckVFQ29Kd1Q2VVErYWV3UWlZT0ljVS9HUnl4ejMyMUdobnU3NGxJcmExZS9mZTdwaGZya2owMUhoeTF1ang0Cld4bnpSQWlxZlMyczlvMk40TFJuMVl3anNTbzhlb3NBUjdJSDEvcHBJUVRRTnpNNUpTL0M2dEk5eXdkVFBMOVUKZHdvZng0VmpkUTZ2M3ppS0p1UjgvMm9ueS9IcmhLZVRZbUNLWi9uTVlBbUZNRU5PL1h1eFIzMUxocFNEb2R5MQpkdEFMNXVLcnJBZ1J0VGltV2szMVRyc01UaWU4OGh0YlpLQTFkMDBDQXdFQUFhTjNNSFV3RGdZRFZSMFBBUUgvCkJBUURBZ0VHTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3SFFZRFZSME9CQllFRkpYV1VmQmwrdHkwN3JBYmhVV1AKNTVVN3BLbk5NQjhHQTFVZEl3UVlNQmFBRkpYV1VmQmwrdHkwN3JBYmhVV1A1NVU3cEtuTk1CSUdBMVVkRVFRTApNQW1DQjJobGNtRXVjbTh3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUtqeDdnRm8xbWs5aUY0Z1h0Zm05NHZsClkyOEMvTVRXWDZ2SGtzL0MrdmtJVG9VOEFGU1QzQUQ5dUU3NzRyMG9VZTAzc1h0SFFNd0kzVm5HMGluZUh1MVIKdW9seWU5cXM0YzRvL2VFUFhHdkVjMHc2KzNvbnY5NVdnbFhHcGZQbVlDRjJYWmEwbEhWQlFFWHJRaVZFQkpwVwo1UW5ncHY5UGdwSGVRbjlrRWltbm85OTkvVkpsMy9LK1Q3U3FKcC9EMllYQncvWFp5S09LOTZkOFg5c0dJVWwwCjlsYWZrQ014cTZoM29vdWk1ZjVJV25KcGFQSEJLQlBWNDZobXhQNnlsbE1aeDhJL0dwU3ZHYUJYTEM5SVBPUS8Kem9kajYxSDBhMUQ2NlA1T3JGSDl3QUNBRll2MzF2Z3FjSkcwVXVhUFIxNDRlYVoxZFY3cWNUS0QxRWZnSGF3PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    auth:
+      kubernetes:
+        role: pg_hera_mtls_issuer
+        mountPath: /v1/auth/kubernetes
+        serviceAccountRef:
+          name: vault-auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pg-perso-mtls-certs
+  namespace: postgresdb
+spec:
+  secretName: pg-perso-mtls
+  issuerRef:
+    name: pg-hera-mtls-issuer
+    kind: Issuer
+  commonName: _crunchyrepl
+  dnsNames:
+    - _crunchyrepl
+    - pg-perso
+    - pg-perso.postgresdb
+    - pg-perso.postgresdb.svc
+    - pg-perso.postgresdb.svc.cluster.local
+    - pg-perso-ha
+    - pg-perso-ha.postgresdb
+    - pg-perso-ha.postgresdb.svc.cluster.local
+    - pg-perso-primary
+    - pg-perso-primary.postgresdb
+    - pg-perso-primary.postgresdb.svc.cluster.local
+    - pg-perso-pgbouncer
+    - pg-perso-pgbouncer.postgresdb
+    - pg-perso-pgbouncer.postgresdb.svc.cluster.local
+    - pg-perso-replica
+    - pg-perso-replica.postgresdb
+    - pg-perso-replica.postgresdb.svc
+    - pg-perso-replica.postgresdb.svc.cluster.local
+    - pg-perso-replica-ha
+    - pg-perso-replica-ha.postgresdb
+    - pg-perso-replica-ha.postgresdb.svc.cluster.local
+  isCA: false
+  duration: 2169h0m0s
+  renewBefore: 2000h0m0s
+  subject:
+    countries:
+      - RO
+    organizations:
+      - Hera-mTLS
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+    - key agreement

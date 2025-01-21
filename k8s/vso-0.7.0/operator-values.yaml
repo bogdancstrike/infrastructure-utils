@@ -1,0 +1,42 @@
+controller:
+  kubeRbacProxy:
+    image:
+      pullPolicy: IfNotPresent
+      repository: nexus.hera.ro/kubebuilder/kube-rbac-proxy
+      tag: v0.15.0
+    logging:
+      level: info
+
+  manager:
+    image:
+      pullPolicy: IfNotPresent
+      repository: nexus.hera.ro/hashicorp/vault-secrets-operator
+      tag: 0.7.0
+    logging:
+      level: info
+#    clientCache:
+#      persistenceModel: "direct-encrypted"
+#      storageEncryption:
+#        enabled: true
+#        keyName: "vso-client-cache"
+#        transitMount: "hera-transit"
+#        namespace: "vault"
+#        mount: kubernetes
+#        kubernetes:
+#          role: "auth-role-operator"
+#          serviceAccount: hera-operator
+defaultVaultConnection:
+  enabled: true
+  address: "https://vault.vault:8200"
+  skipTLSVerify: false
+  caCertSecret: "vault-tls"
+defaultAuthMethod:
+  enabled: true
+  namespace: "vso"
+  allowedNamespaces: ['*']
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: "vso"
+    serviceAccount: default
+    tokenAudiences: ['vault']

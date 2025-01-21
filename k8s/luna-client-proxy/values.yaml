@@ -1,0 +1,80 @@
+replicaCount: 1
+
+image:
+  repository: nexus.hera.ro/lunaclient-proxy
+  pullPolicy: IfNotPresent
+  tag: "10.7.2"
+
+serviceAccount:
+  create: false
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: LoadBalancer
+  port: 5000
+
+ingress:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+#livenessProbe:
+#  tcpSocket:
+#    port: 5000
+#readinessProbe:
+#  tcpSocket:
+#    port: 5000
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+volumeMounts:
+ - name: client-certs
+   mountPath: "/usr/safenet/lunaclient/cert/client"
+   readOnly: true
+ - name: config
+   mountPath: /usr/safenet/lunaclient/config
+   readOnly: true
+volumes:
+ - name: client-certs
+   secret:
+     secretName: luna-client-certs
+ - name: config
+   secret:
+     secretName: chrystoki-config
+
+env:
+ - name: PKCS11_DAEMON_SOCKET
+   value: 'tcp://0.0.0.0:5000'
+ - name: PKCS11_PROXY_SOCKET
+   value: 'tcp://0.0.0.0:5000'
+
+persistence:
+  enabled: false
+  claimName: proxy-hsm-tokens
+  accessMode: ReadWriteMany
+  storageClass: csi-cephfs-sc
+  size: 100Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

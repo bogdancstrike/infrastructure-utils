@@ -1,0 +1,11 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: nginx-ingress
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.10.20.10/32
+  - 10.10.20.9/32
+  - 10.10.20.8/32
+  - 10.10.20.7/32

@@ -1,0 +1,137 @@
+---
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: pg-test
+  namespace: postgresdb
+spec:
+  # dataSource:
+  #   postgresCluster:
+  #     clusterName: pg-test
+  #   #  clusterNamespace: pgo
+  #     repoName: repo1
+  #     options:
+  #     - --type=time
+  #     - --target="2024-11-01 05:17:11-03"
+  service:
+    type: LoadBalancer
+  port: 5432
+  postgresVersion: 16
+  # customReplicationTLSSecret:
+  #   name: pg-test-mtls
+  # customTLSSecret:
+  #   name: pg-test-mtls
+  patroni:
+    switchover:
+      enabled: true
+    leaderLeaseDurationSeconds: 30
+    port: 8008
+    syncPeriodSeconds: 10
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - local all all peer
+          - host all all 127.0.0.1/32 trust
+          - hostnossl all all 10.10.20.0/24 md5
+          - host all all ::1/128 trust
+          - host all all 0.0.0.0/0 md5
+        parameters:
+          max_connections: 999
+          # max_prepared_transactions: 0
+          max_worker_processes: 8
+          max_parallel_workers: 8
+          work_mem: 16MB
+      bootstrap:
+        initdb:
+          - data-checksums=true
+          - encoding=C
+          - locale=C
+  users:
+    - name: postgres
+      options: SUPERUSER
+    - databases:
+        - pg-test1
+      name: pg-test1
+    # - databases:
+    #     - gitea
+    #   name: gitea
+    - databases:
+        - testing
+      name: testing
+  instances:
+    - name: 'test-instance'
+      replicas: 1
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    postgres-operator.crunchydata.com/cluster: 'pg-test'
+                    postgres-operator.crunchydata.com/instance-set: 'test-instance'
+      dataVolumeClaimSpec:
+        storageClassName: csi-cephfs-sc
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 10Gi
+      walVolumeClaimSpec:
+        storageClassName: csi-cephfs-sc
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 8Gi
+  backups:
+    pgbackrest:
+      configuration:
+      - secret:
+          name: pgo-pgbackrest-secrets       
+      global:
+        repo2-path: /
+        repo2-type: s3
+        repo2-s3-uri-style: path
+        repo2-storage-verify-tls: "n"
+        # repo1-cipher-type: aes-256-cbc
+        # repo1-retention-full: "6" # least a week
+        # repo1-retention-full-type: count # time
+        # repo1-retention-diff: "15" # least 3 days
+        # repo1-retention-history: "0"
+        log-level-console: debug
+        log-level-file: info
+      manual:
+        options:
+          - '--type=full'
+        repoName: repo2
+      repos:
+      - name: repo1
+        schedules:
+          full: "30 0 28 * *"
+          differential: "15 9-17/2 * * 1-6"
+        volume:
+          volumeClaimSpec:
+            storageClassName: csi-cephfs-sc
+            accessModes:
+              - ReadWriteMany
+            resources:
+              requests:
+                storage: 10Gi
+      - name: repo2
+        schedules:
+          full: "30 0 28 * *"
+        s3:
+          bucket: s3buckettest
+          endpoint: https://10.10.20.111:443
+          region: default
+          # verify-tls: false
+          # caCert:
+          #   checkCert: false
+      restore:
+        enabled: false
+        repoName: repo2
+        # options:
+        # - --type=time
+        # - --target="2024-09-06 05:38:21-04"

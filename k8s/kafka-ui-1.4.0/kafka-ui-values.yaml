@@ -1,0 +1,50 @@
+image:
+  registry: "nexus.hera.ro"
+  repository: "kafka-ui"
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+yamlApplicationConfig: {}
+  #  kafka:
+  #    clusters:
+  #      - name: kafka
+  #        bootstrapServers: kafka.kafka:9092
+  #        properties:
+  #          security.protocol: SSL
+  #  auth:
+  #    type: disabled
+  #  management:
+  #    health:
+  #      ldap:
+  #        enabled: false
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+    cert-manager.io/common-name: kafka-ui.hera.ro
+  ingressClassName: "nginx"
+  path: "/"
+  pathType: "Prefix"
+  host: "kafka-ui.hera.ro"
+  tls:
+    enabled: true
+    secretName: "kafka-ui.hera.ro-tls"
+
+existingConfigMap: "kafbat-ui-helm-values"
+existingSecret: "kafka-ui-store"
+
+env:
+- name: KAFKA_CLUSTERS_0_PROPERTIES_SSL_TRUSTSTORE_LOCATION 
+  value: /ssl/truststore.jks
+- name: KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_LOCATION
+  value: /ssl/keystore.jks
+
+volumeMounts:
+ - name: config-volume
+   mountPath: /ssl
+
+volumes:
+ - name: config-volume
+   secret:
+     secretName: kafka-ui-tls

@@ -1,0 +1,139 @@
+---
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: pg-perso
+  namespace: postgresdb
+  annotations:
+    postgres-operator.crunchydata.com/autoCreateUserSchema: "true"
+spec:
+#  dataSource: 
+#    postgresCluster:
+#      clusterName: hera-prim-pg
+#      clusterNamespace: pgo
+#      repoName: repo1
+  service:
+    type: LoadBalancer
+  port: 5432
+  postgresVersion: 16
+  customReplicationTLSSecret:
+    name: pg-perso-mtls
+  customTLSSecret:
+    name: pg-perso-mtls
+  patroni:
+    switchover:
+      enabled: true
+    leaderLeaseDurationSeconds: 30
+    port: 8008
+    syncPeriodSeconds: 10
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - local all all peer
+          - host all all 127.0.0.1/32 trust
+          - hostssl all all 0.0.0.0/0 md5
+        parameters:
+          max_connections: 999
+          # max_prepared_transactions: 0
+          max_worker_processes: 8
+          max_parallel_workers: 8
+          work_mem: 16MB
+      bootstrap:
+        initdb:
+          - data-checksums=true
+          - encoding=C
+          - locale=C
+  users:
+    - name: postgres
+      options: SUPERUSER
+    - databases:
+        - keycloak
+      name: keycloak
+    - databases:
+        - gitea
+      name: gitea
+    - databases:
+        - test1
+      name: test1
+    - databases:
+        - test2
+      name: test2 
+  instances:
+    - name: 'instance'
+      replicas: 2
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    postgres-operator.crunchydata.com/cluster: 'pg-perso'
+                    postgres-operator.crunchydata.com/instance-set: 'instance'
+      dataVolumeClaimSpec:
+        storageClassName: csi-cephfs-sc
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 64Gi
+        selector:
+          matchLabels:
+            pgo-postgres-cluster: pg-perso-instance
+      walVolumeClaimSpec:
+        storageClassName: csi-cephfs-sc
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 16Gi
+        selector:
+          matchLabels:
+            pgo-postgres-cluster: pg-perso-wal
+  backups:
+    pgbackrest:
+      configuration:
+      - secret:
+          name: pgo-pgbackrest-secrets
+      global:
+        repo1-cipher-type: aes-256-cbc
+        repo1-retention-full: "6" # least a week
+        repo1-retention-full-type: count # time
+        repo1-retention-diff: "15" # least 3 days
+        repo1-retention-history: "0"
+      manual:
+        options:
+          - '--type=full'
+        repoName: repo1
+      repos:
+      - name: repo1
+        schedules:
+          full: "0 2 * * 1-6"
+          differential: "15 9-17/2 * * 1-6"
+        volume:
+          volumeClaimSpec:
+            storageClassName: csi-cephfs-sc
+            accessModes:
+              - ReadWriteMany
+            resources:
+              requests:
+                storage: 32Gi
+            selector:
+              matchLabels:
+                pgo-postgres-cluster: pg-perso-repo
+  # proxy:
+  #   pgBouncer:
+  #     service:
+  #       type: LoadBalancer
+  #     customTLSSecret:
+  #       name: pg-perso-mtls
+  #     port: 5432
+  #     replicas: 2
+  #     config:
+  #       global:
+  #         client_tls_sslmode: verify-full
+  #         server_tls_sslmode: verify-full
+  #         pool_mode: session
+  #         max_client_conn: "500"
+  #         ignore_startup_parameters: extra_float_digits,search_path

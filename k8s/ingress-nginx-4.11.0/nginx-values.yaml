@@ -1,0 +1,12 @@
+controller:
+  image:
+    repository: nexus.hera.ro/registry.k8s.io/ingress-nginx/controller
+    tag: "v1.11.0"
+    digest: sha256:ca84a4cfc0694c49504a9914176be1eaa8db93c7017c568084a01aafd8035b93
+  admissionWebhooks:
+   patch:
+      enabled: true
+      image:
+        repository: nexus.hera.ro/registry.k8s.io/ingress-nginx/kube-webhook-certgen
+        tag: v1.4.1
+        digest: sha256:997a2b1d1622163df97eab76f21df3544d2254c3830e3961c85384976deb1318

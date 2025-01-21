@@ -1,0 +1,96 @@
+global:
+  imageRegistry: nexus.hera.ro
+
+persistence:
+  enabled: true
+  storageClass: csi-cephfs-sc
+  size: 8Gi
+  accessMode: ReadWriteMany
+
+createInitialUser: true
+
+back:
+  image:
+    repository: taiga-back
+    tag: "6.7.3"
+async:
+  image:
+    repository: taiga-back
+    tag: "6.7.3"
+  rabbitmq:
+    auth:
+      secretName: taiga-rabbitmq
+      usernameKey: rabbitmq-username
+      passwordKey: rabbitmq-password
+events:
+  image:
+    repository: taiga-events
+    tag: "6.7.0"
+  rabbitmq:
+    auth:
+      secretName: taiga-rabbitmq
+      usernameKey: rabbitmq-username
+      passwordKey: rabbitmq-password
+protected:
+  image:
+    repository: taiga-protected
+    tag: "6.7.0"
+front:
+  image:
+    repository: taiga-front
+    tag: "6.7.7"
+gateway:
+  enabled: true
+  image:
+    repository: nginx
+    tag: "1.19-alpine"
+
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  certManager: true
+  hostname: "taiga.hera.ro"
+  tls: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+    cert-manager.io/common-name: taiga.hera.ro
+  secrets:
+   - name: taiga.hera.ro-tls
+
+
+postgresql:
+  auth:
+    database: taiga
+    username: taiga
+    password: taiga
+    host: pg-perso-ha.postgresdb
+  enabled: false
+  db: taiga
+  postgresqlHost: pg-perso-ha.postgresdb
+  secretName: postgresql-secret
+  usernameKey: postgresql-username
+  passwordKey: postgresql-password
+
+async-rabbitmq:
+  enabled: true
+  auth:
+    username: taiga
+    existingPasswordSecret: taiga-rabbitmq
+  persistence:
+    enabled: true
+    storageClass: "csi-rbd-sc"
+    size: 4Gi
+    accessMode: ReadWriteOnce
+
+events-rabbitmq:
+  enabled: true
+  auth:
+    username: taiga
+    existingPasswordSecret: taiga-rabbitmq
+  persistence:
+    enabled: true
+    storageClass: "csi-rbd-sc"
+    size: 4Gi
+    accessMode: ReadWriteOnce

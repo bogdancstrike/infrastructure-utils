@@ -1,0 +1,14 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: keycloak-external-db
+  namespace: keycloak
+spec:
+#  vaultAuthRef: default
+  mount: external-secrets
+  type: kv-v2
+  path: keycloak-external-db
+  refreshAfter: 10s
+  destination:
+    create: true
+    name: keycloak-external-db

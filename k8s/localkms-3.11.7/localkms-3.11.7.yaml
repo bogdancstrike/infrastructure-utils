@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lkms
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: lkms-service
+ namespace: lkms
+spec:
+ ports:
+ - name: lkms
+   protocol: TCP
+   port: 8080
+   targetPort: 8080
+ selector:
+   app: lkms
+ type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+ name: lkms
+ namespace: lkms
+spec:
+ serviceName: lkms-service
+ podManagementPolicy: Parallel
+ replicas: 1
+ updateStrategy:
+   type: RollingUpdate
+ selector:
+   matchLabels:
+     app: lkms
+ template:
+   metadata:
+     labels:
+       app: lkms
+   spec:
+     terminationGracePeriodSeconds: 10
+     containers:
+       - name: lkms
+         image: nexus.hera.ro/public.ecr.aws/nsmithuk/local-kms:3.11.7
+         securityContext:
+           privileged: false
+           runAsUser: 0
+           runAsGroup: 0
+         imagePullPolicy: IfNotPresent
+         env:
+           - name: KMS_ACCOUNT_ID
+             value: b9f0c83a-9d80-4cfc-b0d2-8d3608792062 # uuidgen
+           - name: KMS_REGION
+             value: 'eu-west-2'
+           - name: KMS_SEED_PATH
+             value: '/data/seed.yaml'
+           - name: KMS_DATA_PATH
+             value: '/data'
+         ports:
+         - name: http
+           containerPort: 8080
+           protocol: TCP
+         volumeMounts:
+         - name: lkms-seed
+           mountPath: /data/seed.yaml
+           subPath: seed.yaml
+           readOnly: true
+         - name: lkms-data
+           mountPath: /data
+     volumes:
+     - name: lkms-seed
+       configMap:
+         name: lkms-seed
+         items:
+          - key: seed.yaml
+            path: seed.yaml
+     - name: lkms-data
+       persistentVolumeClaim:
+         claimName: lkms-data
+ volumeClaimTemplates:
+ - metadata:
+    name: lkms-data
+   spec:
+    accessModes: [ "ReadWriteMany" ]
+    resources:
+     requests:
+      storage: 100Mi
+    storageClassName: csi-cephfs-sc
+

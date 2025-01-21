@@ -1,0 +1,58 @@
+global:
+  image:
+    registry: "nexus.hera.ro/ghcr.io"
+
+targetNamespaces: "gitea-runner,gitea,kube-system"
+excludeNamespaces: ""
+
+operator:
+  builtInTrivyServer: true
+  builtInServerRegistryInsecure: true
+  configAuditScannerEnabled: true
+
+
+trivy:
+  command: filesystem
+  storageClassName: "csi-rbd-sc"
+  insecureRegistries: 
+    internalRegistry: nexus.hera.ro
+  offlineScan: true
+  clientServerSkipUpdate: true
+  skipJavaDBUpdate: true
+  dbRegistry: "nexus.hera.ro"
+  dbRepository : "trivydb/trivy-db:2"
+  dbRepositoryUsername: "admin"
+  dbRepositoryPassword: "[][][]"
+  javaDbRegistry: "nexus.hera.ro"
+  javaDbRepository: "trivydb/trivy-java-db"
+  dbRepositoryInsecure: "true"
+
+trivyOperator:
+  scanJobPodTemplateContainerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    privileged: false
+    readOnlyRootFilesystem: true
+    # -- For filesystem scanning, Trivy needs to run as the root user
+    runAsUser: 0
+
+policiesBundle:
+  registry: nexus.hera.ro
+  repository: trivydb/trivy-checks
+  tag: 0
+  registryUser: "admin"
+  registryPassword: "[][][]"
+  existingSecret: false
+  insecure: true
+
+nodeCollector:
+  useNodeSelector: true
+  registry: nexus.hera.ro/ghcr.io
+  repository: aquasecurity/node-collector
+  tag: 0.3.1
+  tolerations:
+   - key: "node-role.kubernetes.io/control-plane"
+     operator: "Exists"
+     effect: "NoSchedule"

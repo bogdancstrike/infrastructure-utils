@@ -1,0 +1,131 @@
+apiVersion: {{ template "taiga.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ template "taiga.fullname" . }}-front
+  labels: {{- include "taiga.front.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{- include "taiga.front.matchLabels" . | nindent 6 }}
+  replicas: {{ .Values.front.replicas }}
+  template:
+    metadata:
+      labels: {{- include "taiga.front.labels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ template "taiga.name" . }}-front
+      {{- if .Values.front.podAnnotations }}
+      annotations:
+        {{- include "taiga.tplValue" (dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "taiga.front.imagePullSecrets" . | indent 6 }}
+      {{- if .Values.front.affinity }}
+      affinity: {{- include "taiga.tplValue" (dict "value" .Values.front.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.front.tolerations }}
+      tolerations: {{- include "taiga.tplValue" (dict "value" .Values.front.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ template "taiga.serviceAccountName" . }}
+      {{- with .Values.front.securityContext }}
+      securityContext: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      # https://www.caktusgroup.com/blog/2017/03/14/production-ready-dockerfile-your-python-django-app/
+      - name: {{ template "taiga.fullname" . }}-front
+        image: {{ template "taiga.front.image" . }}
+        imagePullPolicy: {{ .Values.front.image.pullPolicy | quote }}
+        {{- if .Values.front.resources }}
+        resources: {{ toYaml .Values.front.resources | nindent 12 }}
+        {{- end }}
+        env:
+          {{ if .Values.ingress.enabled }}
+          - name: TAIGA_URL
+            value: "{{ template "taiga.url" . }}"
+          {{ else }}
+          - name: TAIGA_URL
+            value: "http://{{ .Values.gateway.service.loadBalancerIP }}"
+          {{ end }}
+          - name: PUBLIC_REGISTER_ENABLED
+            {{- if .Values.publicRegisterEnabled }}
+            value: "true"
+            {{- else }}
+            value: "false"
+            {{- end }}
+          {{ if .Values.githubAuth.enabled }}
+          - name: ENABLE_GITHUB_AUTH
+            value: "true"
+          - name: GITHUB_CLIENT_ID
+            value: "{{ .Values.githubAuth.apiClientId }}"
+          {{ else }}
+          - name: ENABLE_GITHUB_AUTH
+            value: "false"
+          {{ end }}
+          {{ if .Values.gitlabAuth.enabled }}
+          - name: ENABLE_GITLAB_AUTH
+            value: "true"
+          - name: GITLAB_CLIENT_ID
+            value: "{{ .Values.gitlabAuth.apiClientId }}"
+          - name: GITLAB_URL
+            value: "{{ .Values.gitlabAuth.gitlabUrl }}"
+          {{ else }}
+          - name: ENABLE_GITLAB_AUTH
+            value: "false"
+          {{ end }}
+          - name: ENABLE_SLACK
+            {{ if .Values.enableSlack }}
+            value: "true"
+            {{ else }}
+            value: "false"
+            {{ end }}
+          {{ if .Values.githubImporter.enabled }}
+          - name: ENABLE_GITHUB_IMPORTER
+            value: "true"
+          {{ else }}
+          - name: ENABLE_GITHUB_IMPORTER
+            value: "false"
+          {{ end }}
+          {{ if .Values.jiraImporter.enabled }}
+          - name: ENABLE_JIRA_IMPORTER
+            value: "true"
+          {{ else }}
+          - name: ENABLE_JIRA_IMPORTER
+            value: "false"
+          {{ end }}
+          {{ if .Values.trelloImporter }}
+          - name: ENABLE_TRELLO_IMPORTER
+            value: "true"
+          {{ else }}
+          - name: ENABLE_JIRA_IMPORTER
+            value: "false"
+          {{ end }}
+          {{- if .Values.front.extraVars }}
+          {{- toYaml .Values.back.extraVars | nindent 12 }}
+          {{- end }}
+        ports:
+          - name: taiga-front
+            containerPort: 80
+        # Original check: wget -q -t 1 --spider http://localhost:8080/api/v1/
+        # but it does not work so change localhost to 127.0.0.1
+        {{- if .Values.front.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: /admin/login/
+            port: 8000
+          initialDelaySeconds: {{ .Values.front.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.front.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.front.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.front.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.front.livenessProbe.failureThreshold }}
+        {{- end }}
+        {{- if .Values.front.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: /admin/login/
+            port: 8000
+          initialDelaySeconds: {{ .Values.front.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.front.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.front.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.front.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.front.readinessProbe.failureThreshold }}
+        {{- end }}

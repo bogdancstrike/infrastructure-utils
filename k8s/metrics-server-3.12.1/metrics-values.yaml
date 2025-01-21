@@ -1,0 +1,5 @@
+image:
+  repository: nexus.hera.ro/registry.k8s.io/metrics-server/metrics-server
+  tag: "v0.7.1"
+args:
+  - --kubelet-insecure-tls

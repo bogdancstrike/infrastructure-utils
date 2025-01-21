@@ -1,0 +1,56 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: lkms-seed
+  namespace: lkms
+  labels:
+    app.kubernetes.io/instance: lkms
+    app.kubernetes.io/name: lkms
+data:
+  seed.yaml: |-
+    Keys:
+      Symmetric:
+        Aes:
+          - Metadata:
+              KeyId: e14482f2-aa6f-4ace-a822-d33fd18d1ff5 # uuidgen
+            BackingKeys:
+              - 557B6F2654A1C81355C9251551CB71993A90DD0CECE199C302B443DEE2788269 # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+          - Metadata:
+              KeyId: 8ce66966-cc73-4675-850f-a963f70fb7d7 # uuidgen
+            BackingKeys:
+              - 4A05FC19FE8B3D02DECE959CAB12DB2E3CBCBE89D29B6D26311AF271B1FAC3CA # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+              - 4BFEA0B6E16A9378A3FA5D1024946E42893A7861F92B377BD1B27EF582B7BDB7 # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+              - 5E03F05EAE3BD1C7338439A3808DA230FECCD097594860D304FABEA0D6C7F149 # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+          - Metadata:
+              KeyId: fb755190-caf2-4af3-a10f-bb06d88a848d # uuidgen
+            BackingKeys:
+              - B343C9DBC76C96B49FADEB523337E86BD24599F459D39D3AC7E66744B72CA64A # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+              - 8D3369851B5AA6EA1CBF224597FAEC7616E70710A1D868323320E6D308BEFE2A # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+              - BD1B69387FFF3273FCA8ACFD49ECD4344227B9ACFDD34A8A1DB1E9A9D2045744 # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+              - 9D076F94652850A813918E401525E9D426F473A003512420A2448DA412468CD9 # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+              - 6A14CF1E6588DB8A628F4EBE7CB39094E5B7E7C83F598A9D292FB166A52EE146 # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+              - EC523235CBB41FE583A1F9E99617E320FE37005F7AEFA422CDCD671B4006BDA9 # openssl rand -hex 32 | awk 'BEGIN { getline; print toupper($0) }'
+      Asymmetric:
+        Ecc:
+          - Metadata:
+              KeyId: 9d6dba1c-c5d6-4e2a-8c72-12c87c75c2e7 # uuidgen
+              KeyUsage: SIGN_VERIFY
+              Description: ECC key with curve secp256ri1
+            # openssl ecparam -name prime256v1 -genkey -noout -out private-key.pem
+            # openssl ec -in private-key.pem -pubout -out public-key.pem
+            PrivateKeyPem: |
+              -----BEGIN EC PRIVATE KEY-----
+              MHcCAQEEIKH71L9H59XkhznTLHthc60GflAO9cxxQwH2yp67venNoAoGCCqGSM49
+              AwEHoUQDQgAEilHnRyqJ+oHJgXWYdaf7T46itRWn7rMkUo4Ry/IlK8hX1m1JF05a
+              q5NDPKLT4d8taehzm2x0/bkQe+5/a3qJKg==
+              -----END EC PRIVATE KEY-----
+    Aliases:
+      - AliasName: alias/aes00
+        TargetKeyId: e14482f2-aa6f-4ace-a822-d33fd18d1ff5
+      - AliasName: alias/aes01
+        TargetKeyId: 8ce66966-cc73-4675-850f-a963f70fb7d7
+      - AliasName: alias/aes02
+        TargetKeyId: fb755190-caf2-4af3-a10f-bb06d88a848d
+      - AliasName: alias/ecc01
+        TargetKeyId: 9d6dba1c-c5d6-4e2a-8c72-12c87c75c2e7
+

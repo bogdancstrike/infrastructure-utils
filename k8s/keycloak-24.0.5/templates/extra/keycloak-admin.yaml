@@ -1,0 +1,14 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: keycloak-admin
+  namespace: keycloak
+spec:
+#  vaultAuthRef: default
+  mount: external-secrets
+  type: kv-v2
+  path: keycloak-admin
+  refreshAfter: 10s
+  destination:
+    create: true
+    name: keycloak-admin

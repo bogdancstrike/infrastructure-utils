@@ -1,0 +1,5 @@
+Generare certificat pentru utilizatorul: admin...
+Certificat generat pentru: admin :
+Fisierul PKCS#12 este : ./user_p12/admin.p12
+Parola fisierului: DM/Er,OB2frux!amIp^|
+Seria certificatului: 51A004DA46E29C520475A266252F4BC74633D3FA

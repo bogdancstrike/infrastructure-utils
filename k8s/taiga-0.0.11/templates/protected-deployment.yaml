@@ -1,0 +1,75 @@
+apiVersion: {{ template "taiga.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ template "taiga.fullname" . }}-protected
+  labels: {{- include "taiga.protected.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{- include "taiga.protected.matchLabels" . | nindent 6 }}
+  replicas: {{ .Values.protected.replicas }}
+  template:
+    metadata:
+      labels: {{- include "taiga.protected.labels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ template "taiga.name" . }}-protected
+      {{- if .Values.protected.podAnnotations }}
+      annotations:
+        {{- include "taiga.tplValue" (dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "taiga.protected.imagePullSecrets" . | indent 6 }}
+      {{- if .Values.protected.affinity }}
+      affinity: {{- include "taiga.tplValue" (dict "value" .Values.protected.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.protected.tolerations }}
+      tolerations: {{- include "taiga.tplValue" (dict "value" .Values.protected.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ template "taiga.serviceAccountName" . }}
+      {{- with .Values.protected.securityContext }}
+      securityContext: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      # https://www.caktusgroup.com/blog/2017/03/14/production-ready-dockerfile-your-python-django-app/
+      - name: {{ template "taiga.fullname" . }}-protected
+        image: {{ template "taiga.protected.image" . }}
+        imagePullPolicy: {{ .Values.protected.image.pullPolicy | quote }}
+        {{- if .Values.protected.resources }}
+        resources: {{ toYaml .Values.protected.resources | nindent 12 }}
+        {{- end }}
+        env:
+          - name: SECRET_KEY
+            value: "{{ .Values.secretKey }}"
+          - name: MAX_AGE
+            value: "{{ .Values.protected.maxAge }}"
+          {{- if .Values.protected.extraVars }}
+          {{- toYaml .Values.protected.extraVars | nindent 12 }}
+          {{- end }}
+        ports:
+          - name: taiga-protected
+            containerPort: 8003
+        # Original check: wget -q -t 1 --spider http://localhost:8080/api/v1/
+        # but it does not work so change localhost to 127.0.0.1
+        {{- if .Values.protected.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: /admin/login/
+            port: 8000
+          initialDelaySeconds: {{ .Values.protected.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.protected.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.protected.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.protected.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.protected.livenessProbe.failureThreshold }}
+        {{- end }}
+        {{- if .Values.protected.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: /admin/login/
+            port: 8000
+          initialDelaySeconds: {{ .Values.protected.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.protected.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.protected.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.protected.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.protected.readinessProbe.failureThreshold }}
+        {{- end }}

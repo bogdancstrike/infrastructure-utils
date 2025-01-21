@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: >
+      redis-server 
+      --tls-port 6379 
+      --port 0 
+      --tls-cert-file /tls/tls.crt 
+      --tls-key-file /tls/tls.key 
+      --tls-ca-cert-file /tls/ca.crt
+      --tls-auth-clients yes 
+      --save 60 1 
+      --loglevel warning 
+      --requirepass redis2024
+    healthcheck:
+      test: ["CMD", "redis-cli", "--tls", "--cert", "/tls/tls.crt", "--key", "/tls/tls.key", "--cacert", "/tls/ca.crt", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis-data:/data:rw
+      - redis-db:/db:rw
+      - ./tls:/tls:ro
+    networks:
+      hera_network:
+        ipv4_address: 192.168.3.11
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    restart: always
+    ports:
+      - 5540:5540
+    volumes:
+      - redis-insight:/data:rw
+    networks:
+      hera_network:
+        ipv4_address: 192.168.3.12
+
+networks:
+  hera_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.3.0/24
+          gateway: 192.168.3.1
+
+volumes:
+  redis-data:
+    driver: local
+  redis-db:
+    driver: local
+  redis-insight:
+    driver: local

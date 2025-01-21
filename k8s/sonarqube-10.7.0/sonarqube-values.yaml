@@ -1,0 +1,32 @@
+image:
+  repository: nexus.hera.ro/sonarqube
+  tag: 10.6.0-{{ .Values.edition }}
+  pullPolicy: IfNotPresent
+
+ingress:
+  enabled: false
+  # hosts:
+  #   - name: sonarqube.hera.ro
+  #     path: /
+  #     serviceName: sonarqube-sonarqube
+  #     servicePort: 9000
+  #     pathType: ImplementationSpecific
+  # annotations:
+  #   cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+  #   cert-manager.io/common-name: sonarqube.hera.ro
+  # ingressClassName: nginx
+  # tls:
+  #   - hosts:
+  #     - sonarqube.hera.ro
+  #     secretName: sonarqube.hera.ro-tls
+
+postgresql:
+  enabled: false
+
+jdbcOverwrite:
+  enabled: true
+  jdbcUrl: "jdbc:postgresql://pg-perso-ha.postgresdb:5432/sonarqube?socketTimeout=1500"
+  jdbcUsername: "sonarqube"
+  jdbcPassword: "sonarqube"
+  # jdbcSecretName: "sonarqube-jdbc"
+  # jdbcSecretPasswordKey: "jdbc-password"

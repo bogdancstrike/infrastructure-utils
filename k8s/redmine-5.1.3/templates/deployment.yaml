@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "redmine.fullname" . }}
+  labels:
+    io.kompose.service: {{ include "redmine.fullname" . }}
+  annotations:
+    # apps.kruise.io/container-launch-priority: Ordered
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+spec:
+  replicas: {{ .Values.redmineWeb.replicas }}
+  selector:
+    matchLabels:
+      io.kompose.service: {{ include "redmine.fullname" . }}
+  template:
+    metadata:
+      labels:
+        io.kompose.service: {{ include "redmine.fullname" . }}
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+    spec:
+      volumes:
+      - name: {{ include "redmine.fullname" . }}-storage
+        persistentVolumeClaim:
+          claimName: {{ include "redmine.fullname" . }}-pvc
+
+      containers:    
+      # redmine container
+      - name: redmine-container
+        image: {{ .Values.redmineWeb.redmineContainer.image.repository }}:{{ .Values.redmineWeb.redmineContainer.image.tag | default .Chart.AppVersion }}
+        env:
+        - name: REDMINE_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: {{ include "redmine.fullname" . }}-secrets
+        - name: REDMINE_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: {{ include "redmine.fullname" . }}-secrets
+        - name: REDMINE_DB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database
+              name: {{ include "redmine.fullname" . }}-secrets
+        - name: REDMINE_DB_POSTGRES
+          value: {{ quote .Values.redmineWeb.redmineContainer.env.dbHost }}
+        - name: REDMINE_DB_PORT
+          value: {{ quote .Values.redmineWeb.redmineContainer.env.dbPort }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: cluster.local
+        securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+        livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /login
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 10
+        readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /login
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 10
+        ports:
+        - containerPort: 3000
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: "/opt"
+          name: {{ include "redmine.fullname" . }}-storage    
+        lifecycle:
+            postStart:
+              exec:
+                command: 
+                - /bin/sh
+                - -c
+                - > 
+                  cp /opt/redmine/config/* /usr/src/redmine/config/;
+                  chmod +t -R /usr/local/bundle;
+                  ln -s /usr/local/bin/ruby /usr/bin/ruby;
+                  chown -R redmine:redmine /opt/redmine;
+                  bundle install;
+                  bundle exec rake redmine:plugins RAILS_ENV=production;
+                  bundle exec pumactl -P tmp/pids/server.pid restart;
+      restartPolicy: Always

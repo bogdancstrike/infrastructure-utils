@@ -1,0 +1,92 @@
+image:
+  repository: nexus.hera.ro/keyfactor/ejbca-ce
+  pullPolicy: IfNotPresent
+  tag: 8.2.0.1
+
+replicaCount: 1
+
+ejbca:
+  useEphemeralH2Database: false
+  env:
+    HTTPSERVER_HOSTNAME: ejbca.hera.ro
+#    DATABASE_JDBC_URL: jdbc:postgresql://pg-perso-ha.postgresdb:5432/ejbca
+    DATABASE_JDBC_URL: jdbc:postgresql://pg-perso-ha.postgresdb:5432/ejbca?sslmode=verify-full&sslrootcert=/var/local/ca.crt&sslcert=/var/local/tls.crt&sslkey=/var/local/key.der
+    TLS_SETUP_ENABLED: true
+    TZ: Europa/Bucharest
+    PKCS11_PROXY_SOCKET: 'tcp://luna-client-proxy.luna-client-proxy:5000'
+    JAVA_OPTS_CUSTOM: '-Duser.timezone=Europa/Bucharest'
+  importEjbcaConfFiles: true
+  ejbcaConfFilesSecret: ejbca-conf
+  envRaw:
+    - name: DATABASE_PASSWORD
+      valueFrom:
+       secretKeyRef:
+         name: ejbca-db-credentials
+         key: database_password
+    - name: DATABASE_USER
+      valueFrom:
+       secretKeyRef:
+         name: ejbca-db-credentials
+         key: database_user
+    - name: PASSWORD_ENCRYPTION_KEY
+      valueFrom:
+       secretKeyRef:
+         name: ejbca-secrets
+         key: password_encryption_key
+    - name: CA_KEYSTOREPASS
+      valueFrom:
+       secretKeyRef:
+         name: ejbca-secrets
+         key: ca_keystorepass
+    - name: EJBCA_CLI_DEFAULTPASSWORD
+      valueFrom:
+       secretKeyRef:
+         name: ejbca-secrets
+         key: ejbca_cli_defaultpassword
+  volumeMounts:
+    - name: libs
+      mountPath: /usr/local/lib
+    - name: mtls
+      mountPath: /var/local
+      readOnly: true
+  volumes:
+    - name: libs
+      persistentVolumeClaim:
+        claimName: ejbca-libs
+    - name: mtls # used to connect to postgres with certificated
+      secret:
+        secretName: ejbca-mtls
+        optional: false
+services:
+  directHttp:
+    enabled: true
+    type: LoadBalancer
+    httpPort: 8080
+    httpsPort: 8443
+  proxyAJP:
+    enabled: false
+    type: ClusterIP
+    bindIP: 0.0.0.0
+    port: 8009
+  proxyHttp:
+    enabled: false
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: "optional_no_ca"
+    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: vault-hera-issuer
+    cert-manager.io/common-name: ejbca.hera.ro
+  hosts:
+    - host: "ejbca.hera.ro"
+      paths:
+        - path: /ejbca
+          pathType: Prefix
+  tls:
+    - hosts:
+        - ejbca.hera.ro
+      secretName: ejbca.hera.ro-tls

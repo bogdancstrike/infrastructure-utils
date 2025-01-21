@@ -1,0 +1,122 @@
+global:
+  image:
+    registry: "nexus.hera.ro"
+
+deploymentMode: SingleBinary
+
+loki:
+  image:
+    registry: nexus.hera.ro
+    repository: loki
+    tag: 3.2.0
+  auth_enabled: false
+  storage:
+    type: 'filesystem'
+  memcached:
+    chunk_cache:
+      enabled: true
+      host: ""
+      service: "memcached-client"
+      batch_size: 256
+      parallelism: 10
+    results_cache:
+      enabled: false
+      host: ""
+      service: "memcached-client"
+      timeout: "500ms"
+      default_validity: "12h"
+  commonConfig:
+    replication_factor: 1      
+  schemaConfig:
+    configs:
+    - from: "2024-01-01"
+      store: tsdb
+      index:
+        prefix: loki_index_
+        period: 24h
+      object_store: filesystem # we're storing on filesystem so there's no real persistence here.
+      schema: v13
+kubectlImage:
+  registry: nexus.hera.ro
+  repository: bitnami/kubectl
+
+test:
+  enabled: true
+  canaryServiceAddress: "http://loki-canary:3500/metrics"
+  image:
+    registry: nexus.hera.ro
+    repository: grafana/loki-helm-test
+lokiCanary:
+  enabled: true
+  image:
+    registry: nexus.hera.ro
+    repository: grafana/loki-canary
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+     kubernetes.io/ingress.class: nginx
+     cert-manager.io/cluster-issuer: vault-tls-clusterissuer
+     cert-manager.io/common-name: loki.hera.ro
+  hosts:
+    - loki.hera.ro
+  tls:
+   - hosts:
+      - loki.hera.ro
+     secretName: loki.hera.ro
+singleBinary:
+  replicas: 1
+  persistence:
+    enableStatefulSetAutoDeletePVC: false
+    enabled: true
+    size: 10Gi
+    storageClass: csi-rbd-sc
+gateway: 
+  enabled: false
+write:
+  replicas: 0
+read:
+  replicas: 0
+backend:
+  replicas: 0
+ingester:
+  replicas: 0
+ruler:
+  enabled: false
+memcached:
+  image:
+    repository: nexus.hera.ro
+    tag: 1.6.23-alpine
+memcachedExporter:
+  enabled: true
+  image:
+    registry: "nexus.hera.ro"
+    repository: "memcached-exporter"
+    tag: "v0.14.2"
+resultsCache:
+  enabled: false
+chunksCache:
+  enabled: false
+monitoring:
+  dashboards:
+    enabled: true
+    labels:
+      grafana_dashboard: "1"
+      release: "kube-prometheus-stack"
+  rules:
+    enabled: true
+    labels:
+      release: "kube-prometheus-stack"
+    additionalGroups:
+    - name: additional-loki-rules
+      rules:
+        - record: job:loki_request_duration_seconds_bucket:sum_rate
+          expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job)
+        - record: job_route:loki_request_duration_seconds_bucket:sum_rate
+          expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
+        - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
+          expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)      
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: "kube-prometheus-stack"

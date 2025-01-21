@@ -1,0 +1,7 @@
+apiVersion: v2
+appVersion: 8.0.0
+description: A Helm chart for running EJBCA in Kubernetes
+name: ejbca
+#name: ejbca-community-helm
+type: application
+version: 1.0.3

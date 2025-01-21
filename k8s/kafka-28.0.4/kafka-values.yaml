@@ -1,0 +1,81 @@
+global:
+  imageRegistry: "nexus.hera.ro"
+  storageClass: "csi-rbd-sc"
+
+controller:
+  replicaCount: 3
+  podAntiAffinityPreset: hard
+  resourcesPreset: "large"
+
+broker:
+  replicaCount: 3
+  podAntiAffinityPreset: hard
+  resourcesPreset: "large"
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 60   # 60 seconds delay for the pod to start liveness probe
+    timeoutSeconds: 5
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 60   # 60 seconds delay for pod to start readiness probe
+    timeoutSeconds: 5
+zookeeper:
+  enabled: false
+
+kraft:
+  enabled: true
+
+listeners:
+  client:
+    protocol: SSL
+
+  interbroker:
+    protocol: SSL
+
+  external:
+    protocol: SSL
+    sslClientAuth: "none"
+
+  controller:
+    protocol: SSL
+
+tls:
+  type: jks
+  existingSecret: kafka-tls
+  jksKeystoreKey: "keystore.jks"
+  jksTruststoreKey: "truststore.jks"
+  passwordsSecret: kafka-tls-passwords
+  passwordsSecretKeystoreKey: keystore-pwd
+  passwordsSecretTruststoreKey: truststore-pwd
+  sslClientAuth: "none"
+  endpointIdentificationAlgorithm: ""
+
+externalAccess:
+  enabled: true
+  controller:
+    service:
+      type: LoadBalancer
+      ports:
+        external: 9094
+      loadBalancerIPs:
+        - 10.10.20.180
+        - 10.10.20.181
+        - 10.10.20.182
+#      nodePorts:
+#        - 30001
+#        - 30002
+#        - 30003
+  broker:
+    service:
+      type: LoadBalancer
+      ports:
+        external: 9094
+      loadBalancerIPs:
+        - 10.10.20.183
+        - 10.10.20.184
+        - 10.10.20.185
+
+#      nodePorts:
+#        - 30011
+#        - 30012
+#        - 30013

@@ -1,0 +1,8 @@
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "ingress-ippool"
+spec:
+  allowFirstLastIPs: "No"
+  blocks:
+  - cidr: "101.10.1.0/24"

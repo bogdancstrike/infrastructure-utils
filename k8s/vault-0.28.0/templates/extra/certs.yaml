@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: vault
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: vault-mtls-issuer
+  namespace: vault
+spec:
+  vault:
+    server: https://vault.vault:8200
+    path: pki_int_mtls/sign/vault_mtls
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURLekNDQWhPZ0F3SUJBZ0lVSDZNYzk3SUljaG9QeGwxU1pneVdVc3lnelFVd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0VqRVFNQTRHQTFVRUF4TUhhR1Z5WVM1eWJ6QWdGdzB5TkRBMk1UUXdOak16TlRSYUdBOHlNRFUwTURZdwpOekEyTXpReU5Gb3dFakVRTUE0R0ExVUVBeE1IYUdWeVlTNXliekNDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBTm91TDlHaHNSR0QvMlUwNEV1cFhVVnJSckIzaWpnVktJaXVDVnVXbGZmNDFKUVkKWFpSdUJlbTZLS1VTYk9NQWxheEYxaFN0bkNJOUtuT09iRURsNGJtNHU4aHVkNlRiVkpLOTJESE4rV0NDTHBubAo0ckVFQ29Kd1Q2VVErYWV3UWlZT0ljVS9HUnl4ejMyMUdobnU3NGxJcmExZS9mZTdwaGZya2owMUhoeTF1ang0Cld4bnpSQWlxZlMyczlvMk40TFJuMVl3anNTbzhlb3NBUjdJSDEvcHBJUVRRTnpNNUpTL0M2dEk5eXdkVFBMOVUKZHdvZng0VmpkUTZ2M3ppS0p1UjgvMm9ueS9IcmhLZVRZbUNLWi9uTVlBbUZNRU5PL1h1eFIzMUxocFNEb2R5MQpkdEFMNXVLcnJBZ1J0VGltV2szMVRyc01UaWU4OGh0YlpLQTFkMDBDQXdFQUFhTjNNSFV3RGdZRFZSMFBBUUgvCkJBUURBZ0VHTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3SFFZRFZSME9CQllFRkpYV1VmQmwrdHkwN3JBYmhVV1AKNTVVN3BLbk5NQjhHQTFVZEl3UVlNQmFBRkpYV1VmQmwrdHkwN3JBYmhVV1A1NVU3cEtuTk1CSUdBMVVkRVFRTApNQW1DQjJobGNtRXVjbTh3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUtqeDdnRm8xbWs5aUY0Z1h0Zm05NHZsClkyOEMvTVRXWDZ2SGtzL0MrdmtJVG9VOEFGU1QzQUQ5dUU3NzRyMG9VZTAzc1h0SFFNd0kzVm5HMGluZUh1MVIKdW9seWU5cXM0YzRvL2VFUFhHdkVjMHc2KzNvbnY5NVdnbFhHcGZQbVlDRjJYWmEwbEhWQlFFWHJRaVZFQkpwVwo1UW5ncHY5UGdwSGVRbjlrRWltbm85OTkvVkpsMy9LK1Q3U3FKcC9EMllYQncvWFp5S09LOTZkOFg5c0dJVWwwCjlsYWZrQ014cTZoM29vdWk1ZjVJV25KcGFQSEJLQlBWNDZobXhQNnlsbE1aeDhJL0dwU3ZHYUJYTEM5SVBPUS8Kem9kajYxSDBhMUQ2NlA1T3JGSDl3QUNBRll2MzF2Z3FjSkcwVXVhUFIxNDRlYVoxZFY3cWNUS0QxRWZnSGF3PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    auth:
+      kubernetes:
+        role: vault_mtls_issuer
+        mountPath: /v1/auth/kubernetes
+        serviceAccountRef:
+          name: vault-auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vault-cert
+  namespace: vault
+spec:
+  secretName: vault-tls
+  issuerRef:
+    name: vault-mtls-issuer
+    kind: Issuer
+  commonName: cluster.local
+  ipAddresses:
+    - 127.0.0.1
+  dnsNames:
+    - vault
+    - vault.vault
+    - vault.vault.svc
+    - vault.vault.svc.cluster.local
+    - vault-internal
+    - vault-internal.vault
+    - vault-internal.vault.svc
+    - vault-internal.vault.svc.cluster.local
+    - vault-0.vault-internal
+    - vault-1.vault-internal
+    - vault-2.vault-internal
+  isCA: false
+  duration: 8760h0m0s
+  renewBefore: 8640h0m0s
+  subject:
+    countries:
+      - RO
+    organizations:
+      - Hera-mTLS
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+    - key agreement

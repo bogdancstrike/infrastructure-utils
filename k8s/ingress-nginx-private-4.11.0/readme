@@ -1,0 +1,46 @@
+add a new ingress class name;
+
+Steps:
+- create a new CiliumLoadBalancerIPPool in l2/cilium-ippool.yaml
+---
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "ingress-private"
+spec:
+  blocks:
+  - cidr: "10.10.20.11/32"
+  serviceSelector:
+    matchLabels:
+      #"io.kubernetes.service.namespace": "ingress-private"
+      "ingress": "private"
+- install in a new namespace the helm chart: helm install ingress-private . -f nginx-values.yaml -n ingress-private
+
+- add the ingress=private label to the ingress deployment 
+root@k8s-01:/opt/hera-thirdparty/ingress-nginx-private-4.11.0# kubectl get all -A -l ingress=private
+NAMESPACE         NAME                                                                 TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+ingress-private   service/ingress-private-ingress-nginx-controller-private             LoadBalancer   10.110.169.222   10.10.20.11   80:30833/TCP,443:32386/TCP   46h
+ingress-private   service/ingress-private-ingress-nginx-controller-private-admission   ClusterIP      10.109.62.170    <none>        443/TCP                      46h
+
+- according to the documentation https://kubernetes.github.io/ingress-nginx/user-guide/multiple-ingress/ chech these parameters in ingress deployment:
+kubectl -n ingress-private edit deployments.apps ingress-private-ingress-nginx-controller-private:
+
+        - --controller-class=k8s.io/ingress-nginx-private
+        - --ingress-class=private
+
+- restart the both ingress nginx controllers pods and check the logs to see where will be the new ingress assigned
+
+kubectl -n ingress-private logs -f ingress-private-ingress-nginx-controller-private-54c68d557zpk8h
+kubectl -n nginx-ingress logs -f nginx-ingress-ingress-nginx-controller-574784557b-zzspp  | grep jaeger-query
+
+- in the ingress application add these ingressClassName:
+
+    ingressClassName: private
+    annotations:
+      kubernetes.io/ingress.class: private
+
+
+
+kubectl get CiliumLoadBalancerIPPool
+kubectl  get ingressclasses.networking.k8s.io
+kubectl get ippools
