@@ -1,17 +1,16 @@
 #env_file:
 #  - path: ./.default.env
 #    required: false
-# version: "3.8"
 networks:
   redpanda_network:
     driver: bridge
 volumes:
-  redpanda-0: null
-  redpanda-1: null
-  redpanda-2: null
+  redpanda-0:
+  redpanda-1:
+  redpanda-2:
 services:
   redpanda-0:
-    image: docker.redpanda.com/redpandadata/redpanda:latest
+    image: docker.redpanda.com/redpandadata/redpanda:v26.2.2
     container_name: redpanda-0
     restart: always
     volumes:
@@ -46,7 +45,7 @@ services:
       - --smp 1
       - --default-log-level=info
   redpanda-1:
-    image: docker.redpanda.com/redpandadata/redpanda:latest
+    image: docker.redpanda.com/redpandadata/redpanda:v26.2.2
     container_name: redpanda-1
     restart: always
     depends_on:
@@ -75,7 +74,7 @@ services:
       - --default-log-level=info
       - --seeds redpanda-0:33145
   redpanda-2:
-    image: docker.redpanda.com/redpandadata/redpanda:latest
+    image: docker.redpanda.com/redpandadata/redpanda:v26.2.2
     container_name: redpanda-2
     restart: always
     depends_on:
@@ -104,7 +103,7 @@ services:
       - --default-log-level=info
       - --seeds redpanda-0:33145
   console:
-    image: docker.redpanda.com/redpandadata/console:latest
+    image: docker.redpanda.com/redpandadata/console:v3.12.0
     container_name: redpanda-console
     restart: always
     depends_on:
@@ -120,9 +119,9 @@ services:
       CONSOLE_CONFIG_FILE: |
         kafka:
           brokers: ["redpanda-0:9092"]
-          schemaRegistry:
-            enabled: true
-            urls: ["http://redpanda-0:8081"]
+        schemaRegistry:
+          enabled: true
+          urls: ["http://redpanda-0:8081"]
         redpanda:
           adminApi:
             enabled: true

@@ -1,68 +1,118 @@
-# Docker Compose Utilities for Rapid Deployment
+# Infrastructure utilities
 
-This repository contains Docker Compose files and configuration setups for fast and convenient deployment of various development, monitoring, and infrastructure tools. Each folder includes a `docker-compose.yml` file with optimized configurations to help you quickly spin up instances of the tools with minimal setup.
+Docker Compose stacks and Kubernetes examples for development, testing, and self-hosted infrastructure. Choose individual services as needed; there is no startup step that launches the entire repository.
 
-## Tools Included
+The maintained configurations were refreshed on **2026-10-16**. Images and Helm charts use explicit release tags. See [verified versions and sources](docs/versions.md), the [Kubernetes catalog](k8s/README.md), and [upgrade notes](docs/upgrading.md).
 
-The following tools are supported with their respective configurations in the repository:
+## New services
 
-- **Gitea**: A lightweight Git server.
-- **GitLab**: Git repository management and CI/CD pipeline automation.
-- **Grafana & Prometheus**: Monitoring and alerting setup.
-- **InfluxDB & Grafana**: Time series database with Grafana visualization.
-- **Jaeger & OpenTelemetry**: Distributed tracing system with telemetry support.
-- **Kafka**: Distributed streaming platform. Includes Kafka-UI
-- **Keycloak**: Identity and access management (IAM) solution.
-- **Kibana, Elasticsearch, & Logstash**: ELK stack for logging and search analytics.
-- **MailDev**: Simple email service for development.
-- **MariaDB & Adminer**: MariaDB database with Adminer for web-based administration.
-- **Minio**: High-performance object storage system with UI.
-- **MongoDB**: NoSQL database with Mongo Express UI.
-- **MySQL**: Relational database management system.
-- **Nginx & Proxy Manager**: Web server and reverse proxy management.
-- **Nginx-eID MTLS**: Mutual TLS with electronic identification.
-- **Postfix**: Mail transfer agent (MTA).
-- **Postgres**: PostgreSQL relational database. Includes pg-admin UI
-- **Redis**: In-memory key-value data store. Includes redis-commander UI
-- **Redpanda**: Modern streaming data platform, compatible with Kafka API.
-  - **redpanda-cloud**
-  - **redpanda-single TLS**
-  - **redpanda-single**
-- **Nexus**: Repository manager.
-- **Traefik**: Edge router and load balancer with UI.
-- more at https://github.com/docker/awesome-compose
+| Service | Purpose | Docker | Kubernetes | Local endpoint |
+| --- | --- | --- | --- | --- |
+| **SeaweedFS** | Persistent S3-compatible storage; MinIO alternative | [Compose and S3 guide](docker/seaweedfs) | [Kustomize / Helm guide](k8s/seaweedfs) | S3 `8333`, filer `8888`, master `9333` |
+| **Valkey** | Redis-compatible cache with AOF persistence | [Compose](docker/valkey/docker-compose.yml) | [Kustomize](k8s/apps/valkey), [Helm values](k8s/values/valkey.yaml) | Redis protocol `6379` |
+| **RabbitMQ** | AMQP message broker and management UI | [Compose](docker/rabbitmq/docker-compose.yml) | [Kustomize](k8s/apps/rabbitmq) | AMQP `5672`, UI `15672` |
+| **Mailpit** | SMTP capture, mail preview, and testing API | [Compose](docker/mailpit/docker-compose.yml) | [Kustomize](k8s/apps/mailpit) | SMTP `1025`, UI `8025` |
+| **Uptime Kuma** | HTTP, TCP, DNS, and service uptime monitoring | [Compose](docker/uptime-kuma/docker-compose.yml) | [Kustomize](k8s/apps/uptime-kuma) | UI `3001` |
 
-## Usage
+New Compose examples bind published ports to `127.0.0.1`. Kubernetes Services are `ClusterIP`; use port forwarding for local access. These are independent development examples with sample credentials and single-node storage. Edit credentials before sharing access. Persistent examples require a Kubernetes default StorageClass or a storage override.
 
-Each tool has its own folder containing the necessary `docker-compose.yml` file and any associated configuration files. The steps to deploy any of the tools are as follows:
+## Existing services
 
-1. Clone the repository:
+| Category | Docker examples | Maintained Kubernetes examples |
+| --- | --- | --- |
+| Git and CI | [Gitea](docker/gitea), [GitLab and Runner](docker/gitlab) | Gitea Helm release |
+| Metrics and dashboards | [Prometheus and Grafana](docker/grafana_prometheus), [InfluxDB and Grafana](docker/influx-grafana) | kube-prometheus-stack, metrics-server |
+| Tracing | [Jaeger v2 and OpenTelemetry Collector](docker/jaeger-opentelemetry), [Postgres / Jaeger / Grafana](docker/postgres/postgres-jaeger-grafana) | [Jaeger v2](k8s/apps/jaeger) |
+| Streaming | [Apache Kafka and Kafbat UI](docker/kafka), [Redpanda single-node](docker/redpanda-single), [three-node](docker/redpanda-cloud), [mutual TLS](<docker/redpanda-single TLS>) | Strimzi operator, [Kafka](k8s/apps/kafka), Kafbat UI |
+| Identity | [Keycloak](docker/keycloak) | [Keycloak](k8s/apps/keycloak) |
+| Search and logs | [Elasticsearch, Kibana, Logstash, Filebeat, KurrentDB](docker/kibana-elasticsearh-logstash) | Loki and Alloy |
+| Relational databases | [PostgreSQL](docker/postgres), [simple PostgreSQL](docker/postgres/simple), [MySQL](docker/mysql), [MariaDB / Adminer](docker/mariadb_adminer) | [PostgreSQL](k8s/apps/postgres), CloudNativePG operator |
+| Other databases | [MongoDB / Mongo Express](docker/mongodb), [Redis / RedisInsight](docker/redis) | Valkey |
+| Object storage | [SeaweedFS](docker/seaweedfs), [legacy MinIO source build](docker/minio) | SeaweedFS |
+| Routing | [Traefik](docker/traefik), [Nginx Proxy Manager](docker/nginxproxymanager), [Nginx mutual TLS](docker/nginx-eid-mtls) | Traefik, Cilium, MetalLB, cert-manager |
+| Mail | [Mailpit](docker/mailpit), [MailDev](docker/maildev), [Docker Mailserver](docker/mailserver), [PostfixAdmin](docker/postfix) | Mailpit |
+| Other tools | [Nexus](docker/nexus), [Gammu modem CLI](docker/sms-gamu), [Hera variants](docker/hera) | Nextcloud, SonarQube Community, Vault, Vault Secrets Operator, Trivy Operator, Ceph CSI |
+
+The version-named Kubernetes folders contain the original vendored charts and site-specific settings. They are retained as migration references; use `k8s/helmfile.yaml`, `k8s/values/`, and `k8s/apps/` for current examples. The [migration map](k8s/README.md#original-chart-migration-map) explains replacements and appliance-specific exceptions.
+
+## Docker usage
+
+Requires Docker Engine with the Compose v2+ plugin. To inspect an example without starting it:
 
 ```bash
-git https://github.com/bogdancstrike/infrastructure-utils
+git clone https://github.com/bogdancstrike/infrastructure-utils.git
 cd infrastructure-utils
+docker compose -f docker/seaweedfs/docker-compose.yml config --quiet
 ```
 
-2. Choose project to deploy
+When you want to run that service:
 
 ```bash
-cd gitea
+cd docker/seaweedfs
+docker compose up -d
+docker compose logs -f
 ```
 
-3. Run docker compose
+`docker compose down` stops a stack and retains named volumes. `down --volumes` removes its stored data. Several examples use the same host ports, so choose one stack or override its port mappings. Existing Hera examples retain their custom networks, host data paths, and TLS requirements.
 
-```code
-docker compose up
+The new stacks support these environment overrides in a local `.env` file:
+
+| Stack | Variables | Example defaults |
+| --- | --- | --- |
+| SeaweedFS | `SEAWEEDFS_S3_PORT`, `SEAWEEDFS_MASTER_PORT`, `SEAWEEDFS_FILER_PORT` | `8333`, `9333`, `8888`; credentials in `s3.json` |
+| Valkey | `VALKEY_PORT`, `VALKEY_PASSWORD` | `6379`, `development-password` |
+| RabbitMQ | `RABBITMQ_PORT`, `RABBITMQ_UI_PORT`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD` | `5672`, `15672`, `development`, `development-password` |
+| Mailpit | `MAILPIT_SMTP_PORT`, `MAILPIT_UI_PORT` | `1025`, `8025` |
+| Uptime Kuma | `UPTIME_KUMA_PORT` | `3001`; create the administrator on first use |
+
+See the [SeaweedFS guide](docker/seaweedfs/README.md) for AWS CLI smoke commands, S3 SDK settings, and MinIO migration.
+
+## Kubernetes usage
+
+Requires Helm, Helmfile, and kubectl for deployment. Rendering with Helm or Kustomize does not need a running cluster.
+
+```bash
+# Render one pinned upstream chart without installing it.
+helmfile -f k8s/helmfile.yaml --selector name=seaweedfs template
+
+# Render the standalone example without applying it.
+kubectl kustomize k8s/seaweedfs
+kubectl kustomize k8s/apps/rabbitmq
 ```
 
-## Contributions
+Choose either Helm or Kustomize for SeaweedFS and Valkey; they are alternative installations. When ready to deploy a standalone example:
 
-We welcome contributions to this repository. You can contribute in the following ways:
+```bash
+kubectl apply -k k8s/seaweedfs
+kubectl -n infrastructure port-forward service/seaweedfs 8333:8333
+```
 
-- **Adding New Tools**: If there's a tool you believe should be included, feel free to add a new folder with the `docker-compose.yml` and related configurations.
-- **Improving Configurations**: If you find any configurations that could be optimized or improved, submit a pull request with your changes.
-- **Reporting Issues**: If you encounter any problems, feel free to open an issue describing the problem in detail. This will help us maintain the repository.
-- **Documentation Updates**: If any part of the documentation (including this README) could be improved, please propose the changes.
+For Helm installation, credentials, operator ordering, storage, and ingress settings, follow the [Kubernetes guide](k8s/README.md). Install individual catalog releases with a Helmfile selector.
 
+## Validation and updates
 
-Thank you for using and contributing to this repository! Hope it helps make your tool deployments faster and more efficient.
+Validation does not start containers, build images, install Helm releases, or apply Kubernetes resources.
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements-dev.txt
+
+# Offline Compose parsing and catalog consistency checks.
+python scripts/validate.py
+
+# Also render charts/manifests and validate Kubernetes schemas.
+# Requires helm, kustomize, and kubeconform on PATH; downloads pinned charts/schemas.
+python scripts/validate.py --helm --kustomize --schema
+```
+
+The full check verifies chart archive SHA-256 digests, lints and renders all 21 catalog releases, renders nine Kustomize examples, checks workload references, and validates standard resources and operator custom resources. It targets Kubernetes 1.35 schemas; review your cluster's compatibility before installing cluster-level components. Original vendored charts are outside the maintained validation scope.
+
+[GitHub Actions](.github/workflows/validate.yml) runs the same checks. [Renovate](renovate.json) proposes dependency updates when enabled for this repository. After changing a Helm chart version, refresh its lock metadata and rerun validation:
+
+```bash
+python scripts/update-chart-lock.py
+python scripts/validate.py --helm --kustomize --schema
+```
+
+Major database upgrades require data migration. Read [upgrading existing installations](docs/upgrading.md) before using updated images with existing volumes. The version refresh itself does not migrate or start existing services.

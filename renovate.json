@@ -1,0 +1,36 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["docker-compose", "dockerfile", "helmfile", "helm-values", "kubernetes", "github-actions", "pip_requirements"],
+  "helm-values": {
+    "managerFilePatterns": ["/^k8s/values/.*\\.yaml$/"]
+  },
+  "kubernetes": {
+    "managerFilePatterns": ["/^k8s/apps/[^/]+/resources\\.yaml$/", "/^k8s/seaweedfs/resources\\.yaml$/"]
+  },
+  "ignorePaths": [
+    "k8s/*-*/charts/**",
+    "k8s/*-*/templates/**",
+    "k8s/*-*/values.yaml",
+    "k8s/loki-stack/**",
+    "k8s/common/**"
+  ],
+  "packageRules": [
+    {
+      "description": "Require explicit review of database and infrastructure major upgrades",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Group non-major image updates for compatibility review",
+      "matchManagers": ["docker-compose", "dockerfile", "helm-values", "kubernetes"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "infrastructure image updates"
+    },
+    {
+      "description": "Frozen MinIO source build is local and has no registry release",
+      "matchPackageNames": ["infrastructure-utils/minio"],
+      "enabled": false
+    }
+  ]
+}

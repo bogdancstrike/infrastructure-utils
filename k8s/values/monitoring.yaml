@@ -1,0 +1,22 @@
+grafana:
+  image:
+    tag: 13.2.4
+  persistence:
+    enabled: true
+    size: 5Gi
+  additionalDataSources:
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki-gateway.monitoring.svc.cluster.local
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi

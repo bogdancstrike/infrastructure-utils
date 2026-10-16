@@ -1,0 +1,9 @@
+image:
+  tag: v1.5.0
+yamlApplicationConfig:
+  kafka:
+    clusters:
+    - name: development
+      bootstrapServers: development-kafka-bootstrap.infrastructure.svc.cluster.local:9092
+ingress:
+  enabled: false

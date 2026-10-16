@@ -1,0 +1,168 @@
+helmDefaults:
+  wait: true
+  timeout: 600
+  createNamespace: true
+repositories:
+- name: cilium
+  url: https://helm.cilium.io
+- name: jetstack
+  url: https://charts.jetstack.io
+- name: prometheus-community
+  url: https://prometheus-community.github.io/helm-charts
+- name: grafana
+  url: https://grafana.github.io/helm-charts
+- name: metallb
+  url: https://metallb.github.io/metallb
+- name: metrics-server
+  url: https://kubernetes-sigs.github.io/metrics-server
+- name: traefik
+  url: https://traefik.github.io/charts
+- name: gitea
+  url: https://dl.gitea.com/charts
+- name: nextcloud
+  url: https://nextcloud.github.io/helm
+- name: hashicorp
+  url: https://helm.releases.hashicorp.com
+- name: aqua
+  url: https://aquasecurity.github.io/helm-charts
+- name: ceph-csi
+  url: https://ceph.github.io/csi-charts
+- name: seaweedfs
+  url: https://seaweedfs.github.io/seaweedfs/helm
+- name: sonarqube
+  url: https://SonarSource.github.io/helm-chart-sonarqube
+- name: strimzi
+  url: https://strimzi.io/charts
+- name: cloudnative-pg
+  url: https://cloudnative-pg.github.io/charts
+- name: kafbat
+  url: https://kafbat.github.io/helm-charts
+- name: valkey
+  url: https://valkey.io/valkey-helm
+releases:
+- name: cilium
+  namespace: kube-system
+  chart: cilium/cilium
+  version: 1.20.3
+  values:
+  - values/cilium.yaml
+- name: cert-manager
+  namespace: cert-manager
+  chart: jetstack/cert-manager
+  version: v1.21.2
+  values:
+  - values/cert-manager.yaml
+- name: monitoring
+  namespace: monitoring
+  chart: prometheus-community/kube-prometheus-stack
+  version: 92.10.0
+  values:
+  - values/monitoring.yaml
+- name: alloy
+  namespace: monitoring
+  chart: grafana/alloy
+  version: 1.13.1
+  values:
+  - values/alloy.yaml
+- name: loki
+  namespace: monitoring
+  chart: grafana/loki
+  version: 7.3.0
+  values:
+  - values/loki.yaml
+- name: metallb
+  namespace: metallb-system
+  chart: metallb/metallb
+  version: 0.16.1
+  values:
+  - values/metallb.yaml
+- name: metrics-server
+  namespace: kube-system
+  chart: metrics-server/metrics-server
+  version: 3.14.0
+  values:
+  - values/metrics-server.yaml
+- name: traefik
+  namespace: traefik
+  chart: traefik/traefik
+  version: 42.0.0
+  values:
+  - values/traefik.yaml
+- name: gitea
+  namespace: infrastructure
+  chart: gitea/gitea
+  version: 12.7.0
+  values:
+  - values/gitea.yaml
+- name: nextcloud
+  namespace: infrastructure
+  chart: nextcloud/nextcloud
+  version: 9.4.0
+  values:
+  - values/nextcloud.yaml
+- name: vault
+  namespace: infrastructure
+  chart: hashicorp/vault
+  version: 0.34.1
+  values:
+  - values/vault.yaml
+- name: vault-secrets-operator
+  namespace: infrastructure
+  chart: hashicorp/vault-secrets-operator
+  version: 1.6.0
+  values:
+  - values/vault-secrets-operator.yaml
+- name: trivy-operator
+  namespace: infrastructure
+  chart: aqua/trivy-operator
+  version: 0.37.0
+  values:
+  - values/trivy-operator.yaml
+- name: ceph-csi-rbd
+  namespace: infrastructure
+  chart: ceph-csi/ceph-csi-rbd
+  version: 3.18.1
+  values:
+  - values/ceph-csi-rbd.yaml
+- name: ceph-csi-cephfs
+  namespace: infrastructure
+  chart: ceph-csi/ceph-csi-cephfs
+  version: 3.18.1
+  values:
+  - values/ceph-csi-cephfs.yaml
+- name: seaweedfs
+  namespace: infrastructure
+  chart: seaweedfs/seaweedfs
+  version: 4.48.0
+  values:
+  - values/seaweedfs.yaml
+- name: sonarqube
+  namespace: infrastructure
+  chart: sonarqube/sonarqube
+  version: 2026.5.1002
+  values:
+  - values/sonarqube.yaml
+- name: strimzi
+  namespace: infrastructure
+  chart: strimzi/strimzi-kafka-operator
+  version: 1.3.0
+  values:
+  - values/strimzi.yaml
+- name: cloudnative-pg
+  namespace: cnpg-system
+  chart: cloudnative-pg/cloudnative-pg
+  version: 0.29.1
+  values:
+  - values/cloudnative-pg.yaml
+- name: kafka-ui
+  namespace: infrastructure
+  chart: kafbat/kafka-ui
+  version: 1.6.5
+  values:
+  - values/kafka-ui.yaml
+- name: valkey
+  namespace: infrastructure
+  chart: valkey/valkey
+  version: 0.12.0
+  values:
+  - values/valkey.yaml

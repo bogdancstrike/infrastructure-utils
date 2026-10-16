@@ -1,12 +1,10 @@
-version: "3"
-
 networks:
   gitea:
     external: false
 
 services:
   server:
-    image: gitea/gitea:1.22.1
+    image: gitea/gitea:28.1.0
     container_name: gitea
     environment:
       - USER_UID=1000
@@ -23,14 +21,30 @@ services:
       - "3000:3000"
       - "222:22"
     depends_on:
-      - db
-
+      db:
+        condition: service_healthy
+    volumes:
+      - gitea-data:/data
   db:
-    image: postgres:14
+    image: postgres:18.6
     restart: always
     environment:
       - POSTGRES_USER=gitea
       - POSTGRES_PASSWORD=gitea
       - POSTGRES_DB=gitea
+      - PGDATA=/var/lib/postgresql/data
     networks:
       - gitea
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+volumes:
+  gitea-data:
+  postgres-data:

@@ -1,0 +1,9 @@
+filebeat.inputs:
+  - type: filestream
+    id: kurrentdb-logs
+    paths: ["/var/log/kurrentdb/**/*.json", "/var/log/kurrentdb/**/*.log"]
+    fields:
+      service: eventstoredb
+    fields_under_root: true
+output.logstash:
+  hosts: ["logstash:5044"]

@@ -1,18 +1,29 @@
-version: '3.8'
 services:
   traefik:
-    image: traefik:v3.1.2
+    image: traefik:v3.7.15
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
+      - --providers.docker.exposedbydefault=false
+      - --ping=true
     ports:
-      - "80:80"
-      - "8080:8080"
+      - 80:80
+      - 127.0.0.1:8080:8080
     networks:
       - dev-network
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - traefik
+        - healthcheck
+        - --ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
 networks:
   dev-network:
     driver: bridge

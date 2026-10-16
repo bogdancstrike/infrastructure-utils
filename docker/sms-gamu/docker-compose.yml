@@ -1,0 +1,5 @@
+services:
+  gammu:
+    build: .
+    devices: ["${GAMMU_DEVICE:-/dev/ttyUSB0}:/dev/ttyUSB0"]
+    volumes: ["./gammu-config/gammurc:/root/.gammurc:ro"]

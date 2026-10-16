@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   mysql:
-    image: mysql:8.2.0
+    image: mysql:8.4.11
     container_name: mysql-dev
     environment:
       MYSQL_DATABASE: dev           # Predefined database
@@ -19,8 +17,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"  # Make host accessible within the container
 
+    restart: unless-stopped
   phpmyadmin:
-    image: phpmyadmin
+    image: phpmyadmin:5.2.3
     ports:
       - "8081:80"
     environment:
@@ -28,6 +27,7 @@ services:
     networks:
       - dev-network
 
+    restart: unless-stopped
 networks:
   dev-network:
     driver: bridge

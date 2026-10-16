@@ -1,26 +1,38 @@
 services:
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/jaeger:2.22.0
     container_name: jaeger-container
     restart: unless-stopped
-    networks: 
+    networks:
       hera_network:
         ipv4_address: 192.168.0.12
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "4317:4317"    # Collector, OpenTelemetry gRPC
-      - "4318:4318"    # Collector, OpenTelemetry gRPC
-      - "5775:5775"
-      - "5778:5778"
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
       - "6831:6831/udp"
       - "6832:6832/udp"
       - "14250:14250"
-      - "14267:14267"
       - "14268:14268"
-    environment:
-      - LOG_LEVEL=debug
-      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
-
+      - 9411:9411
+    command:
+      - --config=/etc/jaeger/config.yaml
+    volumes:
+      - ./jaeger.yaml:/etc/jaeger/config.yaml:ro
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.162.0
+    restart: unless-stopped
+    command:
+      - --config=/etc/otelcol/config.yaml
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - 127.0.0.1:14317:4317
+      - 127.0.0.1:14318:4318
+    networks:
+      - hera_network
+    depends_on:
+      - jaeger
 networks:
   hera_network:
     driver: bridge

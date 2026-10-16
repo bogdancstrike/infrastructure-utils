@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infrastructure
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  labels: &id001
+    app.kubernetes.io/name: jaeger
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *id001
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: jaeger
+        image: jaegertracing/jaeger:2.22.0
+        ports:
+        - name: http
+          containerPort: 16686
+        - name: otlp-grpc
+          containerPort: 4317
+        - name: otlp-http
+          containerPort: 4318
+        - name: health
+          containerPort: 13133
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 1Gi
+        args:
+        - --config=/etc/jaeger/config.yaml
+        readinessProbe:
+          httpGet: &id002
+            path: /status
+            port: health
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          httpGet: *id002
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 6
+        startupProbe:
+          httpGet: *id002
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 60
+        volumeMounts:
+        - name: config
+          mountPath: /etc/jaeger/config.yaml
+          subPath: config.yaml
+          readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: config
+        configMap:
+          name: jaeger-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  labels: &id001
+    app.kubernetes.io/name: jaeger
+spec:
+  type: ClusterIP
+  selector: *id001
+  ports:
+  - name: http
+    port: 16686
+    targetPort: http
+  - name: otlp-grpc
+    port: 4317
+    targetPort: otlp-grpc
+  - name: otlp-http
+    port: 4318
+    targetPort: otlp-http
+  - name: health
+    port: 13133
+    targetPort: health

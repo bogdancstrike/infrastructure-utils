@@ -1,0 +1,4 @@
+# Persist the filer index alongside the master metadata and volume data.
+[leveldb2]
+enabled = true
+dir = "/data/filerldb2"

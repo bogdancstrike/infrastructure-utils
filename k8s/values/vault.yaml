@@ -1,0 +1,12 @@
+injector:
+  enabled: false
+server:
+  dev:
+    enabled: false
+  standalone:
+    enabled: true
+  dataStorage:
+    enabled: true
+    size: 10Gi
+ui:
+  enabled: true

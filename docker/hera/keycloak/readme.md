@@ -1,6 +1,7 @@
-for exporting as snapshot current docker container and reimport (and reuse) it, use the following commands:
+# Hera Keycloak development example
 
-docker export <container_id> > keycloak.tar
-docker import < keycloak.tar img_keycloak
+Uses the current upstream Keycloak image with `start-dev`, persistent development data and the local theme directory. Select a realm theme through Keycloak administration; the old `KC_THEME_DEFAULT` variable did not select themes.
 
-docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin img_keycloak:latest /opt/keycloak/bin/kc.sh start-dev
+Override `KEYCLOAK_ADMIN` and `KEYCLOAK_ADMIN_PASSWORD` in `.env`; Compose maps them to the current `KC_BOOTSTRAP_ADMIN_*` variables. These initialize a new administrator and do not reset an existing account. Validate with `docker compose config --quiet` before starting when wanted.
+
+For realm transfers, use Keycloak's documented export/import commands with the same supported server version. Exporting a container filesystem does not include named volume data. Back up the actual database or development data volume before changing versions.

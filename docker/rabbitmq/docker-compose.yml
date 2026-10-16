@@ -1,0 +1,21 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.3.6-management-alpine
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-development}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-development-password}
+    ports:
+      - "127.0.0.1:${RABBITMQ_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_UI_PORT:-15672}:15672"
+    volumes: ["rabbitmq-data:/var/lib/rabbitmq"]
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, -q, ping]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    stop_grace_period: 30s
+volumes:
+  rabbitmq-data:

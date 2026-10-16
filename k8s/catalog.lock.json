@@ -1,0 +1,173 @@
+{
+  "verifiedOn": "2026-10-16",
+  "releases": {
+    "cilium": {
+      "chart": "cilium/cilium",
+      "version": "1.20.3",
+      "appVersion": "1.20.3",
+      "repository": "https://helm.cilium.io",
+      "url": "https://helm.cilium.io/cilium-1.20.3.tgz",
+      "digest": "0805a5273118c436c9772bb9566d87ec558d8b25cc2ce5dc32918ecdd36f2c7c"
+    },
+    "cert-manager": {
+      "chart": "jetstack/cert-manager",
+      "version": "v1.21.2",
+      "appVersion": "v1.21.2",
+      "repository": "https://charts.jetstack.io",
+      "url": "https://charts.jetstack.io/charts/cert-manager-v1.21.2.tgz",
+      "digest": "73a56e1728edd6c99f1f31082618c3259d279a76b7ebd3d4bdc5475c2442d34a"
+    },
+    "monitoring": {
+      "chart": "prometheus-community/kube-prometheus-stack",
+      "version": "92.10.0",
+      "appVersion": "v0.94.1",
+      "repository": "https://prometheus-community.github.io/helm-charts",
+      "url": "https://github.com/prometheus-community/helm-charts/releases/download/kube-prometheus-stack-92.10.0/kube-prometheus-stack-92.10.0.tgz",
+      "digest": "85240efc443d7c2525d72851ab9c7c550c7abdb892b70f768ab8e727d9c3c898"
+    },
+    "alloy": {
+      "chart": "grafana/alloy",
+      "version": "1.13.1",
+      "appVersion": "v1.20.1",
+      "repository": "https://grafana.github.io/helm-charts",
+      "url": "https://github.com/grafana/helm-charts/releases/download/alloy-1.13.1/alloy-1.13.1.tgz",
+      "digest": "6c2b7df23e39438bb11f1e1fcf19eb9eb7c8bfeab7d49b7c975b6212abd0f99a"
+    },
+    "loki": {
+      "chart": "grafana/loki",
+      "version": "7.3.0",
+      "appVersion": "3.6.12",
+      "repository": "https://grafana.github.io/helm-charts",
+      "url": "https://github.com/grafana/helm-charts/releases/download/helm-loki-7.3.0/loki-7.3.0.tgz",
+      "digest": "04a339f712d770a1f599f05fc0a5a3cde18e43914e49ae6a49f7171be86bcc09"
+    },
+    "metallb": {
+      "chart": "metallb/metallb",
+      "version": "0.16.1",
+      "appVersion": "v0.16.1",
+      "repository": "https://metallb.github.io/metallb",
+      "url": "https://github.com/metallb/metallb/releases/download/metallb-chart-0.16.1/metallb-0.16.1.tgz",
+      "digest": "fb06bb584fcb7856f15733b2a6a2aff5b61b5c350687e341c163ae24a5938adc"
+    },
+    "metrics-server": {
+      "chart": "metrics-server/metrics-server",
+      "version": "3.14.0",
+      "appVersion": "0.9.0",
+      "repository": "https://kubernetes-sigs.github.io/metrics-server",
+      "url": "https://github.com/kubernetes-sigs/metrics-server/releases/download/metrics-server-helm-chart-3.14.0/metrics-server-3.14.0.tgz",
+      "digest": "c2ca1185c01e6e7f53dd1b7d131f0c9b3fa50e003ed068b784563a1b5a3422a1"
+    },
+    "traefik": {
+      "chart": "traefik/traefik",
+      "version": "42.0.0",
+      "appVersion": "v3.7.14",
+      "repository": "https://traefik.github.io/charts",
+      "url": "https://traefik.github.io/charts/traefik/traefik-42.0.0.tgz",
+      "digest": "a6ede324662ddcca0160a5ce639b7b5b9dd40a20a475e1101e9f95b5e5d83dd5"
+    },
+    "gitea": {
+      "chart": "gitea/gitea",
+      "version": "12.7.0",
+      "appVersion": "1.27.0",
+      "repository": "https://dl.gitea.com/charts",
+      "url": "https://dl.gitea.com/charts/gitea-12.7.0.tgz",
+      "digest": "5881ef9c59400bee2d5547e77c4cd0efb925143c2f5d93fb4f38446db76b0167"
+    },
+    "nextcloud": {
+      "chart": "nextcloud/nextcloud",
+      "version": "9.4.0",
+      "appVersion": "35.0.1",
+      "repository": "https://nextcloud.github.io/helm",
+      "url": "https://github.com/nextcloud/helm/releases/download/nextcloud-9.4.0/nextcloud-9.4.0.tgz",
+      "digest": "b6e60a13811200ea16fbfcadc9d75de20ec453a27a5d6f63e9302e503e8b7921"
+    },
+    "vault": {
+      "chart": "hashicorp/vault",
+      "version": "0.34.1",
+      "appVersion": "2.0.4",
+      "repository": "https://helm.releases.hashicorp.com",
+      "url": "https://helm.releases.hashicorp.com/vault-0.34.1.tgz",
+      "digest": "df4c37fac32496892ff1e1d6fd7954d3a402cc7b1b2b4c2226af11b8a57564c4"
+    },
+    "vault-secrets-operator": {
+      "chart": "hashicorp/vault-secrets-operator",
+      "version": "1.6.0",
+      "appVersion": "1.6.0",
+      "repository": "https://helm.releases.hashicorp.com",
+      "url": "https://helm.releases.hashicorp.com/vault-secrets-operator-1.6.0.tgz",
+      "digest": "de3e0a520918fc7281b94fa060fe8d1858c5db5b8fb6b1463024268e7c4541c0"
+    },
+    "trivy-operator": {
+      "chart": "aqua/trivy-operator",
+      "version": "0.37.0",
+      "appVersion": "0.35.0",
+      "repository": "https://aquasecurity.github.io/helm-charts",
+      "url": "https://github.com/aquasecurity/helm-charts/releases/download/trivy-operator-0.37.0/trivy-operator-0.37.0.tgz",
+      "digest": "6d23f16d950496d17253258ca2e52bd068959041298e66c0652bf0841ccedf69"
+    },
+    "ceph-csi-rbd": {
+      "chart": "ceph-csi/ceph-csi-rbd",
+      "version": "3.18.1",
+      "appVersion": "3.18.1",
+      "repository": "https://ceph.github.io/csi-charts",
+      "url": "https://ceph.github.io/csi-charts/rbd/ceph-csi-rbd-3.18.1.tgz",
+      "digest": "ad9e98ac5501cb647b7f18342492f2e49e5cb1c9ff308ef759bd74ef5b4b3e99"
+    },
+    "ceph-csi-cephfs": {
+      "chart": "ceph-csi/ceph-csi-cephfs",
+      "version": "3.18.1",
+      "appVersion": "3.18.1",
+      "repository": "https://ceph.github.io/csi-charts",
+      "url": "https://ceph.github.io/csi-charts/cephfs/ceph-csi-cephfs-3.18.1.tgz",
+      "digest": "01fac42009678ec37b7d3c2f2b313f7d6f4caff1a18e62fb8e763976e26b656d"
+    },
+    "seaweedfs": {
+      "chart": "seaweedfs/seaweedfs",
+      "version": "4.48.0",
+      "appVersion": "4.48",
+      "repository": "https://seaweedfs.github.io/seaweedfs/helm",
+      "url": "https://seaweedfs.github.io/seaweedfs/helm/seaweedfs-4.48.0.tgz",
+      "digest": "fa9beb4b68ee1e56129779643194968210381a33caf47fc177fd17d43efb686e"
+    },
+    "sonarqube": {
+      "chart": "sonarqube/sonarqube",
+      "version": "2026.5.1002",
+      "appVersion": "2026.5.2",
+      "repository": "https://SonarSource.github.io/helm-chart-sonarqube",
+      "url": "https://github.com/SonarSource/helm-chart-sonarqube/releases/download/sonarqube-2026.5.1002-sonarqube-dce-2026.5.1002/sonarqube-2026.5.1002.tgz",
+      "digest": "1e367fb662e8d5c73d7b24adc5f7c1639d23be737a80fcd79eda07df21fc70bc"
+    },
+    "strimzi": {
+      "chart": "strimzi/strimzi-kafka-operator",
+      "version": "1.3.0",
+      "appVersion": "1.3.0",
+      "repository": "https://strimzi.io/charts",
+      "url": "https://github.com/strimzi/strimzi-kafka-operator/releases/download/1.3.0/strimzi-kafka-operator-helm-3-chart-1.3.0.tgz",
+      "digest": "42677cec73d2122f4a395d9891bbccfae18ec16b3582174d49ca04695f351192"
+    },
+    "cloudnative-pg": {
+      "chart": "cloudnative-pg/cloudnative-pg",
+      "version": "0.29.1",
+      "appVersion": "1.30.1",
+      "repository": "https://cloudnative-pg.github.io/charts",
+      "url": "https://github.com/cloudnative-pg/charts/releases/download/cloudnative-pg-v0.29.1/cloudnative-pg-0.29.1.tgz",
+      "digest": "b53d3991fe84bcf38767e7702cae78666265427a127a26fff168ab4207d2b1df"
+    },
+    "kafka-ui": {
+      "chart": "kafbat/kafka-ui",
+      "version": "1.6.5",
+      "appVersion": "v1.5.0",
+      "repository": "https://kafbat.github.io/helm-charts",
+      "url": "https://kafbat.github.io/helm-charts/kafka-ui-1.6.5.tgz",
+      "digest": "b310da9471867b37e43face0e474eae0788c4562d3573c9f13be027b7b0e11b8"
+    },
+    "valkey": {
+      "chart": "valkey/valkey",
+      "version": "0.12.0",
+      "appVersion": "9.1.2",
+      "repository": "https://valkey.io/valkey-helm",
+      "url": "https://github.com/valkey-io/valkey-helm/releases/download/valkey-0.12.0/valkey-0.12.0.tgz",
+      "digest": "64d43433d6b80addb012dd7c21a1bf674bf034dc51210b6bf8eae9ddaf83740f"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+name: Validate infrastructure examples
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.13'
+          cache: pip
+      - uses: azure/setup-helm@v5.0.1
+        with:
+          version: v4.3.1
+      - name: Install validation tools
+        shell: bash
+        run: |
+          python -m pip install -r requirements-dev.txt
+          mkdir -p "$RUNNER_TEMP/infra-tools"
+          curl -fsSL --retry 3 'https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.8.3/kustomize_v5.8.3_linux_amd64.tar.gz' -o "$RUNNER_TEMP/kustomize.tar.gz"
+          tar -xzf "$RUNNER_TEMP/kustomize.tar.gz" -C "$RUNNER_TEMP/infra-tools" kustomize
+          curl -fsSL --retry 3 'https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz' -o "$RUNNER_TEMP/kubeconform.tar.gz"
+          tar -xzf "$RUNNER_TEMP/kubeconform.tar.gz" -C "$RUNNER_TEMP/infra-tools" kubeconform
+          echo "$RUNNER_TEMP/infra-tools" >> "$GITHUB_PATH"
+      - name: Validate Compose, chart rendering and Kubernetes schemas
+        run: python scripts/validate.py --helm --kustomize --schema
+      - name: Check patch whitespace
+        run: git diff --check

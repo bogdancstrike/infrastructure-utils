@@ -1,186 +1,118 @@
-#version: '3.8'
-
 networks:
   redpanda-network:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.5.0/24
-
+      - subnet: 192.168.5.0/24
 volumes:
-  redpanda-tls:
-  etc-redpanda-1:
-    driver: local # Define the driver and options under the volume name
-    driver_opts:
-      type: none
-      device: /opt/docker/etc-1
-      o: bind
-  etc-redpanda-2:
-    driver: local # Define the driver and options under the volume name
-    driver_opts:
-      type: none
-      device: /opt/docker/etc-2
-      o: bind
-  etc-redpanda-3:
-    driver: local # Define the driver and options under the volume name
-    driver_opts:
-      type: none
-      device: /opt/docker/etc-3
-      o: bind
   redpanda-1:
-    driver: local # Define the driver and options under the volume name
+    driver: local
     driver_opts:
       type: none
       device: /opt/docker/redpanda-1
       o: bind
   redpanda-2:
-    driver: local # Define the driver and options under the volume name
+    driver: local
     driver_opts:
       type: none
       device: /opt/docker/redpanda-2
       o: bind
   redpanda-3:
-    driver: local # Define the driver and options under the volume name
+    driver: local
     driver_opts:
       type: none
       device: /opt/docker/redpanda-3
       o: bind
-  redpanda-config:
-    driver: local # Define the driver and options under the volume name
-    driver_opts:
-      type: none
-      device: /opt/docker/redpanda-config
-      o: bind
-
 services:
   redpanda-1:
-    image: vectorized/redpanda:latest
+    image: docker.redpanda.com/redpandadata/redpanda:v26.2.2
     container_name: redpanda-1
     restart: always
     volumes:
-      - etc-redpanda-1:/etc/redpanda
-      - redpanda-1:/var/lib/redpanda/data
-      - ./redpanda.yaml:/etc/redpanda/redpanda.yaml
-      - ./tls:/etc/redpanda/tls
-      - redpanda-config:/etc/redpanda
+    - redpanda-1:/var/lib/redpanda/data
+    - ./redpanda-1.yaml:/etc/redpanda/redpanda.yaml:ro
+    - ./tls:/etc/redpanda/tls:ro
     command:
-      - redpanda start
-      - --smp 1
-      - --overprovisioned
-      - --node-id 0
-      - --kafka-addr INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092
-      - --advertise-kafka-addr INTERNAL://redpanda-1:9092,EXTERNAL://localhost:19092
-#      - --tls-key-file /etc/tls/server.key
-#      - --tls-cert-file /etc/tls/server.crt
-#      - --tls-truststore-file /etc/tls/ca.crt
-#      - --require-client-auth
-#      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
-#      - --advertise-pandaproxy-addr internal://redpanda-0:8082,external://localhost:18082
-#      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
-#      - --rpc-addr redpanda-0:33145
-#      - --advertise-rpc-addr redpanda-0:33145
-#      - --mode dev-container
+    - redpanda
+    - start
+    - --config
+    - /etc/redpanda/redpanda.yaml
+    - --mode
+    - dev-container
+    - --smp
+    - '1'
     ports:
-      - "19092:19092"
-      - "18081:18081"
-      - "18082:18082"
-      - "19644:9644"
+    - 19092:19092
+    - 19644:9644
     networks:
       redpanda-network:
         ipv4_address: 192.168.5.2
-
   redpanda-2:
-    image: vectorized/redpanda:latest
+    image: docker.redpanda.com/redpandadata/redpanda:v26.2.2
     container_name: redpanda-2
     restart: always
     depends_on:
-      - redpanda-1
+    - redpanda-1
     volumes:
-      - etc-redpanda-2:/etc/redpanda
-      - redpanda-2:/var/lib/redpanda/data
-      - ./redpanda.yaml:/etc/redpanda/redpanda.yaml
-      - ./tls:/etc/redpanda/tls
-      - redpanda-config:/etc/redpanda
+    - redpanda-2:/var/lib/redpanda/data
+    - ./redpanda-2.yaml:/etc/redpanda/redpanda.yaml:ro
+    - ./tls:/etc/redpanda/tls:ro
     command:
-      - redpanda start
-      - --smp 1
-      - --overprovisioned
-      - --node-id 1
-      - --kafka-addr INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19093
-      - --advertise-kafka-addr INTERNAL://redpanda-2:9092,EXTERNAL://localhost:19093
-#      - --tls-key-file /etc/tls/server.key
-#      - --tls-cert-file /etc/tls/server.crt
-#      - --tls-truststore-file /etc/tls/ca.crt
-#      - --require-client-auth
-#      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:28082
-#      - --advertise-pandaproxy-addr internal://redpanda-0:8082,external://localhost:28082
-#      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:28081
-#      - --rpc-addr redpanda-0:33145
-#      - --advertise-rpc-addr redpanda-0:33145
-#      - --mode dev-container
+    - redpanda
+    - start
+    - --config
+    - /etc/redpanda/redpanda.yaml
+    - --mode
+    - dev-container
+    - --smp
+    - '1'
     ports:
-      - "19093:19093"
-      - "28081:28081"
-      - "28082:28082"
-      - "29644:9644"
+    - 19093:19093
+    - 29644:9644
     networks:
       redpanda-network:
         ipv4_address: 192.168.5.3
-
   redpanda-3:
-    image: vectorized/redpanda:latest
+    image: docker.redpanda.com/redpandadata/redpanda:v26.2.2
     container_name: redpanda-3
     restart: always
     depends_on:
-      - redpanda-1
+    - redpanda-1
     volumes:
-      - etc-redpanda-3:/etc/redpanda
-      - redpanda-3:/var/lib/redpanda/data
-      - ./redpanda.yaml:/etc/redpanda/redpanda.yaml
-      - ./tls:/etc/redpanda/tls
-      - redpanda-config:/etc/redpanda
+    - redpanda-3:/var/lib/redpanda/data
+    - ./redpanda-3.yaml:/etc/redpanda/redpanda.yaml:ro
+    - ./tls:/etc/redpanda/tls:ro
     command:
-      - redpanda start
-      - --smp 1
-      - --overprovisioned
-      - --node-id 2
-      - --kafka-addr INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19094
-      - --advertise-kafka-addr INTERNAL://redpanda-3:9092,EXTERNAL://localhost:19094
-#      - --tls-key-file /etc/tls/server.key
-#      - --tls-cert-file /etc/tls/server.crt
-#      - --tls-truststore-file /etc/tls/ca.crt
-#      - --require-client-auth
-#      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:38082
-#      - --advertise-pandaproxy-addr internal://redpanda-0:8082,external://localhost:38082
-#      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:38081
-#      - --rpc-addr redpanda-0:33145
-#      - --advertise-rpc-addr redpanda-0:33145
-#      - --mode dev-container
+    - redpanda
+    - start
+    - --config
+    - /etc/redpanda/redpanda.yaml
+    - --mode
+    - dev-container
+    - --smp
+    - '1'
     ports:
-      - "19094:19094"
-      - "38081:38081"
-      - "38082:38082"
-      - "39644:9644"
+    - 19094:19094
+    - 39644:9644
     networks:
       redpanda-network:
         ipv4_address: 192.168.5.4
-
   redpanda-console:
-    image: docker.redpanda.com/vectorized/console:latest
+    image: docker.redpanda.com/redpandadata/console:v3.12.0
     container_name: redpanda-console
     restart: always
     depends_on:
-      - redpanda-1
+    - redpanda-1
     environment:
-      - KAFKA_BROKERS=redpanda-1:9092,redpanda-2:9092,redpanda-3:9092
-      - KAFKA_TLS_ENABLED=true
-      - KAFKA_TLS_CA=/etc/tls/ca.crt
-      - KAFKA_TLS_CERT=/etc/tls/client.crt
-      - KAFKA_TLS_KEY=/etc/tls/client.key
+    - KAFKA_BROKERS=redpanda-1:9092,redpanda-2:9092,redpanda-3:9092
+    - KAFKA_TLS_ENABLED=true
+    - KAFKA_TLS_CAFILEPATH=/etc/tls/ca.crt
+    - KAFKA_TLS_CERTFILEPATH=/etc/tls/client.crt
+    - KAFKA_TLS_KEYFILEPATH=/etc/tls/client.key
     volumes:
-      - ./tls:/etc/tls
+    - ./tls:/etc/tls:ro
     ports:
-      - "8080:8080"
+    - 8080:8080
     networks:
       redpanda-network:
         ipv4_address: 192.168.5.5

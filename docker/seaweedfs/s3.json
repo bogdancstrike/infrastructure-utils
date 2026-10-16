@@ -1,0 +1,11 @@
+{
+  "identities": [
+    {
+      "name": "development-admin",
+      "credentials": [
+        {"accessKey": "seaweedfs-admin", "secretKey": "development-secret-change-me"}
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

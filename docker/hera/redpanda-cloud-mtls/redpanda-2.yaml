@@ -1,0 +1,44 @@
+redpanda:
+  data_directory: /var/lib/redpanda/data
+  node_id: 1
+  seed_servers:
+  - host:
+      address: redpanda-1
+      port: 33145
+  rpc_server:
+    address: 0.0.0.0
+    port: 33145
+  advertised_rpc_api:
+    address: redpanda-2
+    port: 33145
+  kafka_api:
+  - name: internal
+    address: 0.0.0.0
+    port: 9092
+  - name: external
+    address: 0.0.0.0
+    port: 19093
+  advertised_kafka_api:
+  - name: internal
+    address: redpanda-2
+    port: 9092
+  - name: external
+    address: localhost
+    port: 19093
+  kafka_api_tls:
+  - name: internal
+    enabled: true
+    require_client_auth: true
+    key_file: /etc/redpanda/tls/server.key
+    cert_file: /etc/redpanda/tls/server.crt
+    truststore_file: /etc/redpanda/tls/ca.crt
+  - name: external
+    enabled: true
+    require_client_auth: true
+    key_file: /etc/redpanda/tls/server.key
+    cert_file: /etc/redpanda/tls/server.crt
+    truststore_file: /etc/redpanda/tls/ca.crt
+  admin:
+  - address: 0.0.0.0
+    port: 9644
+  developer_mode: true

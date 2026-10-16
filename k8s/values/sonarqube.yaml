@@ -1,0 +1,11 @@
+community:
+  enabled: true
+monitoringPasscode: development-passcode
+persistence:
+  enabled: true
+  size: 10Gi
+jdbcOverwrite:
+  enabled: true
+  jdbcUrl: jdbc:postgresql://postgres.infrastructure.svc.cluster.local:5432/development
+  jdbcUsername: development
+  jdbcPassword: development-password

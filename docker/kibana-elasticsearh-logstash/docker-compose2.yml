@@ -1,38 +1,72 @@
-version: '3.8'
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5  # Updated to 8.11.3
+    container_name: elasticsearch-8
     environment:
-      discovery.type: single-node
-      ELASTIC_USERNAME: elastic
-      ELASTIC_PASSWORD: changeme
+      - discovery.type=single-node
+      - xpack.security.enabled=false # Disable security for dev (remove ELASTIC_USERNAME/PASSWORD)
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # Optional: Adjust memory
+      # - cluster.name=my-dev-cluster # Optional: cluster name
     ports:
       - "9200:9200"
+      - "9300:9300" # For internal cluster communication if ever scaled (not used in single-node)
+    volumes:
+      - esdata:/usr/share/elasticsearch/data # Persist Elasticsearch data
     networks:
       - dev-network
-
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
   logstash:
-    image: docker.elastic.co/logstash/logstash:7.10.2
+    image: docker.elastic.co/logstash/logstash:9.5.5  # Updated to 8.11.3
+    container_name: logstash-8
+    # Add your Logstash pipeline configuration here, e.g., via a volume mount:
+    # volumes:
+    #   - ./logstash-pipeline/:/usr/share/logstash/pipeline/
     networks:
       - dev-network
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy # Wait for Elasticsearch to be healthy
+    # ports: # Expose Logstash ports if needed, e.g., for Beats input
+    #   - "5044:5044"
 
+    restart: unless-stopped
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - 5044:5044
+      - 5000:5000
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.10.2
+    image: docker.elastic.co/kibana/kibana:9.5.5  # Updated to 8.11.3
+    container_name: kibana-8
     environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-      ELASTICSEARCH_USERNAME: elastic
-      ELASTICSEARCH_PASSWORD: changeme
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]' # Ensure this points to the ES service name
+      # ELASTICSEARCH_USERNAME and ELASTICSEARCH_PASSWORD are not needed if xpack.security.enabled=false on ES
+      # SERVER_NAME: kibana.example.org # Optional
     ports:
       - "5601:5601"
     networks:
       - dev-network
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy # Wait for Elasticsearch to be healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -I http://localhost:5601/api/status | grep -q 'HTTP/1.1 200 OK'"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
+    restart: unless-stopped
 volumes:
-  esdata:
+  esdata: # Define the named volume for Elasticsearch data
+
 networks:
   dev-network:
     driver: bridge

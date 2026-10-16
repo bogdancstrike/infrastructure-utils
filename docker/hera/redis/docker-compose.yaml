@@ -1,20 +1,12 @@
 services:
   redis:
-    image: redis:6.2-alpine
+    image: redis:8.10.2
     restart: always
     ports:
       - '6379:6379'
     command: >
-      redis-server 
-      --tls-port 6379 
-      --port 0 
-      --tls-cert-file /tls/tls.crt 
-      --tls-key-file /tls/tls.key 
-      --tls-ca-cert-file /tls/ca.crt
-      --tls-auth-clients yes 
-      --save 60 1 
-      --loglevel warning 
-      --requirepass redis2024
+      redis-server  --tls-port 6379  --port 0  --tls-cert-file /tls/tls.crt  --tls-key-file /tls/tls.key  --tls-ca-cert-file /tls/ca.crt --tls-auth-clients
+      yes  --save 60 1  --loglevel warning  --requirepass ${REDIS_PASSWORD:-redis2024}
     healthcheck:
       test: ["CMD", "redis-cli", "--tls", "--cert", "/tls/tls.crt", "--key", "/tls/tls.key", "--cacert", "/tls/ca.crt", "ping"]
       interval: 3s
@@ -28,8 +20,11 @@ services:
       hera_network:
         ipv4_address: 192.168.3.11
 
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis2024}
+      REDISCLI_AUTH: ${REDIS_PASSWORD:-redis2024}
   redis-insight:
-    image: redis/redisinsight:latest
+    image: redis/redisinsight:3.8.0
     restart: always
     ports:
       - 5540:5540

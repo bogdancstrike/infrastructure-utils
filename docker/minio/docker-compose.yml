@@ -1,8 +1,8 @@
-version: '3.8'
-
 services:
   minio:
-    image: minio/minio:latest
+    image: infrastructure-utils/minio:RELEASE.2025-10-15T17-29-55Z
+    build: .
+    pull_policy: build
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: adminpassword
@@ -15,6 +15,7 @@ services:
     networks:
       - minio-network
 
+    restart: unless-stopped
 volumes:
   minio_data:
     driver: local

@@ -1,0 +1,32 @@
+image:
+  tag: 28.1.0-rootless
+replicaCount: 1
+postgresql:
+  enabled: false
+postgresql-ha:
+  enabled: false
+valkey:
+  enabled: false
+valkey-cluster:
+  enabled: false
+gitea:
+  admin:
+    username: admin
+    password: development-password
+    email: admin@example.test
+  config:
+    database:
+      DB_TYPE: sqlite3
+    cache:
+      ADAPTER: memory
+    session:
+      PROVIDER: memory
+    queue:
+      TYPE: level
+    server:
+      HTTP_PORT: 3000
+      SSH_PORT: 22
+      SSH_LISTEN_PORT: 2222
+persistence:
+  enabled: true
+  size: 10Gi

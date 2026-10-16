@@ -1,27 +1,37 @@
-version: '3.7'
 services:
   web:
-    image: 'gitlab/gitlab-ce:latest'
+    image: 'gitlab/gitlab-ce:19.4.2-ce.0'
     restart: always
     hostname: 'localhost'
     container_name: gitlab-ce
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://localhost'
+        external_url 'http://localhost:8080'
+        nginx['listen_port'] = 80
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
     ports:
       - '8080:80'
       - '8443:443'
+      - 2222:22
     networks:
       - gitlab
+    volumes:
+      - gitlab-config:/etc/gitlab
+      - gitlab-logs:/var/log/gitlab
+      - gitlab-data:/var/opt/gitlab
+    shm_size: 256m
   gitlab-runner:
-    image: gitlab/gitlab-runner:alpine
-    container_name: gitlab-runner    
+    image: gitlab/gitlab-runner:alpine-v19.4.1
+    container_name: gitlab-runner
     restart: always
     depends_on:
       - web
     networks:
       - gitlab
 
+    volumes:
+      - runner-config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
 networks:
   gitlab:
     name: gitlab-network
@@ -32,3 +42,8 @@ networks:
 # To log in to GitLab for the first time, you need a temporary password, which is generated automatically during installation. We get the password using the command:
 
 # docker exec -it gitlab-ce grep 'Password:' /etc/gitlab/initial_root_password
+volumes:
+  gitlab-config:
+  gitlab-logs:
+  gitlab-data:
+  runner-config:

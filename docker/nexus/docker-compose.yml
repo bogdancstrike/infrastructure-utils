@@ -1,7 +1,6 @@
-version: '3.8'
 services:
   nexus:
-    image: sonatype/nexus3:latest  # Ensure the latest version is pulled
+    image: sonatype/nexus3:3.97.0  # Ensure the latest version is pulled
     ports:
       - "8081:8081"  # Nexus default port
     networks:
@@ -14,9 +13,8 @@ services:
         soft: 65536
         hard: 65536
     environment:
-      - NEXUS_CONTEXT=/nexus  # Default context path
-      - INSTALL4J_ADD_VM_PARAMS=-Xms1200M -Xmx1200M -XX:MaxDirectMemorySize=2G  # Memory allocation tuning
-
+      - NEXUS_CONTEXT_PATH=/nexus
+      - INSTALL4J_ADD_VM_PARAMS=-Xms1200M -Xmx1200M -XX:MaxDirectMemorySize=2G
 volumes:
   nexus-data:  # Persistent storage for Nexus data
     driver: local

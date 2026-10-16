@@ -1,0 +1,13 @@
+image:
+  tag: 9.1.2
+dataStorage:
+  enabled: true
+  requestedSize: 5Gi
+  keepPvc: true
+valkeyConfig: appendonly yes
+auth:
+  enabled: true
+  aclUsers:
+    default:
+      permissions: ~* &* +@all
+      password: development-password

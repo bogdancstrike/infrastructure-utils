@@ -1,7 +1,6 @@
-version: '3.8'
 services:
   mariadb:
-    image: mariadb:latest
+    image: mariadb:11.8.9
     environment:
       MYSQL_ROOT_PASSWORD: dev
       MYSQL_DATABASE: dev
@@ -12,13 +11,27 @@ services:
     networks:
       - mariadb-network
 
+    restart: unless-stopped
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD
+        - healthcheck.sh
+        - --connect
+        - --innodb_initialized
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
   adminer:
-    image: adminer
+    image: adminer:6.1.2
     ports:
       - "8080:8080"
     networks:
       - mariadb-network
 
+    restart: unless-stopped
 volumes:
   mariadb_data:
 

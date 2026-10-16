@@ -1,0 +1,12 @@
+image:
+  tag: v3.7.15
+ingressClass:
+  enabled: true
+  isDefaultClass: false
+providers:
+  kubernetesIngress:
+    enabled: true
+  kubernetesCRD:
+    enabled: true
+service:
+  type: LoadBalancer

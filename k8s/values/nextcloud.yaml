@@ -1,0 +1,19 @@
+image:
+  tag: 35.0.1-apache
+nextcloud:
+  host: nextcloud.localhost
+  username: admin
+  password: development-password
+internalDatabase:
+  enabled: true
+mariadb:
+  enabled: false
+postgresql:
+  enabled: false
+redis:
+  enabled: false
+persistence:
+  enabled: true
+  size: 10Gi
+cronjob:
+  enabled: true

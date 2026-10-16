@@ -1,0 +1,29 @@
+image:
+  tag: '4.48'
+master:
+  enabled: false
+volume:
+  enabled: false
+filer:
+  enabled: false
+s3:
+  enabled: false
+admin:
+  enabled: false
+allInOne:
+  enabled: true
+  s3:
+    enabled: true
+    enableAuth: true
+    existingConfigSecret: seaweedfs-s3-config
+  data:
+    type: persistentVolumeClaim
+    size: 20Gi
+    accessModes:
+    - ReadWriteOnce
+  extraArgs:
+  - -master.volumeSizeLimitMB=1024
+  - -volume.max=8
+  extraEnvironmentVars:
+    WEED_LEVELDB2_ENABLED: 'true'
+    WEED_LEVELDB2_DIR: /data/filerldb2

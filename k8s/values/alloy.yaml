@@ -1,0 +1,19 @@
+image:
+  tag: v1.20.1
+controller:
+  type: daemonset
+alloy:
+  configMap:
+    content: "discovery.kubernetes \"pods\" {\n  role = \"pod\"\n  selectors {\n    role = \"pod\"\n    field =\
+      \ \"spec.nodeName=\" + sys.env(\"HOST_NODE_NAME\")\n  }\n}\ndiscovery.relabel \"pods\" {\n  targets = discovery.kubernetes.pods.targets\n\
+      \  rule {\n    source_labels = [\"__meta_kubernetes_namespace\"]\n    target_label = \"namespace\"\n  }\n\
+      \  rule {\n    source_labels = [\"__meta_kubernetes_pod_name\"]\n    target_label = \"pod\"\n  }\n  rule {\n\
+      \    source_labels = [\"__meta_kubernetes_pod_container_name\"]\n    target_label = \"container\"\n  }\n}\n\
+      loki.source.kubernetes \"pods\" {\n  targets = discovery.relabel.pods.output\n  forward_to = [loki.write.local.receiver]\n\
+      }\nloki.write \"local\" {\n  endpoint {\n    url = \"http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push\"\
+      \n  }\n}\n"
+  extraEnv:
+  - name: HOST_NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName

@@ -1,10 +1,9 @@
-# version: '3'
 # openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout certs/ca.key -out certs/ca.crt
 # openssl req -new -newkey rsa:2048 -nodes -keyout certs/nginx.key -out certs/nginx.csr
 # openssl x509 -req -days 365 -in certs/nginx.csr -CA certs/ca.crt -CAkey certs/ca.key -set_serial 01 -out certs/nginx.crt
 services:
   nginx:
-    image: nginx:alpine
+    image: nginx:1.30.6-alpine
     restart: always
     ports:
       - "443:443"

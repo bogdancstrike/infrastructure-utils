@@ -1,36 +1,5 @@
-version: '3.8'
-
-services:
-  gammu:
-    image: gammu/gammu
-    container_name: gammu
-    devices:
-      - "/dev/ttyUSB0:/dev/ttyUSB0"
-    environment:
-      - GAMMU_DEVICE=/dev/ttyUSB0
-      - GAMMU_CONNECTION=at115200
-    volumes:
-      - ./gammu-config:/etc/gammu
-    restart: always
-
-
-# gammurc ini file
-gammu-config/gammurc
-[gammu]
-device = /dev/ttyUSB0
-connection = at115200
-
-# python code
-import gammu
-
-sm = gammu.StateMachine()
-sm.ReadConfig()
-sm.Init()
-
-message = {
-    'Text': 'Hello, this is a test message!',
-    'SMSC': {'Location': 1},
-    'Number': '+1234567890',
-}
-
-sm.SendSMS(message)
+FROM debian:13.7-slim
+RUN apt-get update && apt-get install -y --no-install-recommends gammu python3-gammu \
+    && rm -rf /var/lib/apt/lists/*
+ENTRYPOINT ["gammu"]
+CMD ["--help"]
